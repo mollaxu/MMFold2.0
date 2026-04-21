@@ -1,0 +1,237 @@
+/* ── Page ── */
+.rp-page {
+  min-height: 100vh;
+  background: #0d0d0d;
+  color: #e8e8e8;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Top Nav ── */
+.rp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 52px;
+  border-bottom: 1px solid #222;
+  background: #111;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.rp-header-left { display: flex; align-items: center; gap: 32px; }
+.rp-header-right { display: flex; align-items: center; gap: 16px; }
+
+.rp-logo { display: flex; align-items: center; gap: 8px; }
+.rp-logo-icon { font-size: 20px; }
+.rp-logo-text { font-size: 15px; font-weight: 600; color: #fff; }
+
+.rp-nav { display: flex; gap: 24px; }
+.rp-nav a { font-size: 14px; color: #aaa; text-decoration: none; }
+.rp-nav a:hover { color: #fff; }
+
+.rp-nav-icon { font-size: 18px; cursor: pointer; opacity: 0.7; }
+.rp-avatar { width: 28px; height: 28px; border-radius: 50%; background: #5b5fc7; cursor: pointer; }
+
+/* ── Sub-header ── */
+.rp-subheader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 24px;
+  border-bottom: 1px solid #1e1e1e;
+  background: #111;
+}
+.rp-back {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.rp-back:hover { color: #fff; background: #222; }
+.rp-task-name { font-size: 15px; font-weight: 500; color: #fff; flex: 1; }
+.rp-download {
+  background: none;
+  border: 1px solid #333;
+  color: #ccc;
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.rp-download:hover { background: #222; }
+
+/* ── Content ── */
+.rp-content {
+  max-width: 1260px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 24px 24px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Section header ── */
+.rp-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.rp-section-title { font-size: 18px; font-weight: 600; color: #fff; }
+
+/* ── Sample tabs ── */
+.rp-sample-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+.rp-sample-tab {
+  padding: 6px 18px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #1a1a1a;
+  color: #ccc;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.rp-sample-tab:hover { background: #252525; color: #fff; }
+.rp-sample-tab.active {
+  background: #fff;
+  color: #111;
+  border-color: #fff;
+}
+
+/* ── pLDDT legend ── */
+.rp-plddt-legend {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  background: #161616;
+  border: 1px solid #222;
+  border-radius: 8px;
+  padding: 16px;
+}
+.rp-plddt-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: #aaa;
+}
+.rp-plddt-bar {
+  height: 6px;
+  border-radius: 3px;
+}
+
+/* ── Metrics ── */
+.rp-metrics {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #161616;
+  border: 1px solid #222;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 15px;
+}
+.rp-metric-label { color: #888; font-weight: 500; }
+.rp-metric-value { font-family: 'SF Mono', monospace; color: #fff; font-size: 16px; }
+.rp-learn-more { color: #4dd8e8; font-size: 13px; text-decoration: none; margin-left: 8px; }
+.rp-learn-more:hover { text-decoration: underline; }
+
+/* ── Viewers ── */
+.rp-viewers {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 16px;
+  min-height: 520px;
+}
+@media (max-width: 900px) {
+  .rp-viewers { grid-template-columns: 1fr; }
+  .rp-plddt-legend { grid-template-columns: repeat(2, 1fr); }
+}
+
+.rp-viewer-card {
+  background: #161616;
+  border: 1px solid #222;
+  border-radius: 10px;
+  overflow: hidden;
+  min-height: 480px;
+  display: flex;
+  flex-direction: column;
+}
+
+.rp-loading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 14px;
+}
+
+/* ── Molstar overlays ── */
+.mol-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #1a1d24;
+  color: #888;
+  font-size: 14px;
+  gap: 8px;
+}
+.mol-error { background: #1a1212; color: #f87171; }
+
+/* ── PAE canvas ── */
+.pae-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  height: 100%;
+}
+.pae-tooltip {
+  z-index: 50;
+  background: #222;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #ddd;
+  line-height: 1.6;
+  pointer-events: none;
+}
+.pae-chain-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #aaa;
+}
+.pae-chain-toggle input { cursor: pointer; }
+.pae-chain-toggle label { cursor: pointer; }
+
+.pae-legend { display: flex; flex-direction: column; gap: 4px; }
+.pae-legend-label { font-size: 13px; color: #aaa; font-weight: 500; }
+.pae-legend-bar {
+  height: 14px;
+  border-radius: 3px;
+  background: linear-gradient(to right, rgb(0,100,0), rgb(144,238,144), rgb(200,230,200));
+}
+.pae-legend-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #666;
+}
+.pae-legend-unit { font-size: 11px; color: #555; text-align: center; }
