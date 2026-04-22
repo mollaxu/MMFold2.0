@@ -1,0 +1,359 @@
+{
+  "schemes": {
+    "IMGT": {
+      "groups": [
+        {
+          "id": "cdr_h1", "label": "CDR-H1", "color": "#1E90FF", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"B","seqId":27,"resType":"G"},{"chain":"B","seqId":28,"resType":"F"},
+            {"chain":"B","seqId":29,"resType":"I"},{"chain":"B","seqId":30,"resType":"V"},
+            {"chain":"B","seqId":31,"resType":"S"},{"chain":"B","seqId":32,"resType":"R"},
+            {"chain":"B","seqId":33,"resType":"N"},{"chain":"B","seqId":34,"resType":"Y"},
+            {"chain":"B","seqId":35,"resType":"M"},{"chain":"B","seqId":36,"resType":"N"}
+          ]
+        },
+        {
+          "id": "cdr_h2", "label": "CDR-H2", "color": "#4169E1", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"B","seqId":56,"resType":"Y"},{"chain":"B","seqId":57,"resType":"G"},
+            {"chain":"B","seqId":58,"resType":"S"},{"chain":"B","seqId":59,"resType":"G"},
+            {"chain":"B","seqId":60,"resType":"R"},{"chain":"B","seqId":61,"resType":"T"},
+            {"chain":"B","seqId":62,"resType":"D"}
+          ]
+        },
+        {
+          "id": "cdr_h3", "label": "CDR-H3", "color": "#0055CC", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"B","seqId":107,"resType":"C"},{"chain":"B","seqId":108,"resType":"A"},
+            {"chain":"B","seqId":109,"resType":"R"},{"chain":"B","seqId":110,"resType":"D"},
+            {"chain":"B","seqId":111,"resType":"A"},{"chain":"B","seqId":112,"resType":"D"},
+            {"chain":"B","seqId":113,"resType":"Y"},{"chain":"B","seqId":114,"resType":"G"}
+          ]
+        },
+        {
+          "id": "cdr_l1", "label": "CDR-L1", "color": "#00CED1", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"A","seqId":27,"resType":"E"},{"chain":"A","seqId":28,"resType":"P"},
+            {"chain":"A","seqId":29,"resType":"D"},{"chain":"A","seqId":30,"resType":"I"},
+            {"chain":"A","seqId":31,"resType":"K"},{"chain":"A","seqId":32,"resType":"L"},
+            {"chain":"A","seqId":33,"resType":"S"},{"chain":"A","seqId":34,"resType":"D"},
+            {"chain":"A","seqId":35,"resType":"I"},{"chain":"A","seqId":36,"resType":"V"},
+            {"chain":"A","seqId":37,"resType":"I"}
+          ]
+        },
+        {
+          "id": "cdr_l2", "label": "CDR-L2", "color": "#20B2AA", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"A","seqId":56,"resType":"E"},{"chain":"A","seqId":57,"resType":"G"},
+            {"chain":"A","seqId":58,"resType":"K"},{"chain":"A","seqId":59,"resType":"D"},
+            {"chain":"A","seqId":60,"resType":"E"},{"chain":"A","seqId":61,"resType":"L"},
+            {"chain":"A","seqId":62,"resType":"S"}
+          ]
+        },
+        {
+          "id": "cdr_l3", "label": "CDR-L3", "color": "#008B8B", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"A","seqId":105,"resType":"D"},{"chain":"A","seqId":106,"resType":"A"},
+            {"chain":"A","seqId":107,"resType":"G"},{"chain":"A","seqId":108,"resType":"T"},
+            {"chain":"A","seqId":109,"resType":"Y"},{"chain":"A","seqId":110,"resType":"K"},
+            {"chain":"A","seqId":111,"resType":"C"},{"chain":"A","seqId":112,"resType":"Y"},
+            {"chain":"A","seqId":113,"resType":"I"}
+          ]
+        },
+        {
+          "id": "epitope", "label": "Epitope", "color": "#CC44FF", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"C","seqId":37,"resType":"Y"},{"chain":"C","seqId":47,"resType":"L"},
+            {"chain":"C","seqId":50,"resType":"Y"},{"chain":"C","seqId":90,"resType":"Q"},
+            {"chain":"C","seqId":92,"resType":"Y"},{"chain":"C","seqId":97,"resType":"L"},
+            {"chain":"C","seqId":98,"resType":"Y"}
+          ]
+        }
+      ]
+    },
+    "Kabat": {
+      "groups": [
+        {
+          "id": "cdr_h1", "label": "CDR-H1", "color": "#1E90FF", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"B","seqId":26,"resType":"G"},{"chain":"B","seqId":27,"resType":"F"},
+            {"chain":"B","seqId":28,"resType":"I"},{"chain":"B","seqId":29,"resType":"V"},
+            {"chain":"B","seqId":30,"resType":"S"},{"chain":"B","seqId":31,"resType":"R"},
+            {"chain":"B","seqId":32,"resType":"N"},{"chain":"B","seqId":33,"resType":"Y"},
+            {"chain":"B","seqId":34,"resType":"M"},{"chain":"B","seqId":35,"resType":"N"}
+          ]
+        },
+        {
+          "id": "cdr_h2", "label": "CDR-H2", "color": "#4169E1", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"B","seqId":52,"resType":"Y"},{"chain":"B","seqId":53,"resType":"G"},
+            {"chain":"B","seqId":54,"resType":"S"},{"chain":"B","seqId":55,"resType":"G"},
+            {"chain":"B","seqId":56,"resType":"R"},{"chain":"B","seqId":57,"resType":"T"},
+            {"chain":"B","seqId":58,"resType":"D"}
+          ]
+        },
+        {
+          "id": "cdr_h3", "label": "CDR-H3", "color": "#0055CC", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"B","seqId":95,"resType":"C"},{"chain":"B","seqId":96,"resType":"A"},
+            {"chain":"B","seqId":97,"resType":"R"},{"chain":"B","seqId":98,"resType":"D"},
+            {"chain":"B","seqId":99,"resType":"A"},{"chain":"B","seqId":100,"resType":"D"},
+            {"chain":"B","seqId":101,"resType":"Y"},{"chain":"B","seqId":102,"resType":"G"}
+          ]
+        },
+        {
+          "id": "cdr_l1", "label": "CDR-L1", "color": "#00CED1", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"A","seqId":24,"resType":"E"},{"chain":"A","seqId":25,"resType":"P"},
+            {"chain":"A","seqId":26,"resType":"D"},{"chain":"A","seqId":27,"resType":"I"},
+            {"chain":"A","seqId":28,"resType":"K"},{"chain":"A","seqId":29,"resType":"L"},
+            {"chain":"A","seqId":30,"resType":"S"},{"chain":"A","seqId":31,"resType":"D"},
+            {"chain":"A","seqId":32,"resType":"I"},{"chain":"A","seqId":33,"resType":"V"},
+            {"chain":"A","seqId":34,"resType":"I"}
+          ]
+        },
+        {
+          "id": "cdr_l2", "label": "CDR-L2", "color": "#20B2AA", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"A","seqId":50,"resType":"E"},{"chain":"A","seqId":51,"resType":"G"},
+            {"chain":"A","seqId":52,"resType":"K"},{"chain":"A","seqId":53,"resType":"D"},
+            {"chain":"A","seqId":54,"resType":"E"},{"chain":"A","seqId":55,"resType":"L"},
+            {"chain":"A","seqId":56,"resType":"S"}
+          ]
+        },
+        {
+          "id": "cdr_l3", "label": "CDR-L3", "color": "#008B8B", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"A","seqId":89,"resType":"D"},{"chain":"A","seqId":90,"resType":"A"},
+            {"chain":"A","seqId":91,"resType":"G"},{"chain":"A","seqId":92,"resType":"T"},
+            {"chain":"A","seqId":93,"resType":"Y"},{"chain":"A","seqId":94,"resType":"K"},
+            {"chain":"A","seqId":95,"resType":"C"},{"chain":"A","seqId":96,"resType":"Y"},
+            {"chain":"A","seqId":97,"resType":"I"}
+          ]
+        },
+        {
+          "id": "epitope", "label": "Epitope", "color": "#CC44FF", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"C","seqId":37,"resType":"Y"},{"chain":"C","seqId":47,"resType":"L"},
+            {"chain":"C","seqId":50,"resType":"Y"},{"chain":"C","seqId":90,"resType":"Q"},
+            {"chain":"C","seqId":92,"resType":"Y"},{"chain":"C","seqId":97,"resType":"L"},
+            {"chain":"C","seqId":98,"resType":"Y"}
+          ]
+        }
+      ]
+    },
+    "EU": {
+      "groups": [
+        {
+          "id": "cdr_h1", "label": "CDR-H1", "color": "#1E90FF", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"B","seqId":31,"resType":"G"},{"chain":"B","seqId":32,"resType":"F"},
+            {"chain":"B","seqId":33,"resType":"I"},{"chain":"B","seqId":34,"resType":"V"},
+            {"chain":"B","seqId":35,"resType":"S"},{"chain":"B","seqId":36,"resType":"R"},
+            {"chain":"B","seqId":37,"resType":"N"},{"chain":"B","seqId":38,"resType":"Y"},
+            {"chain":"B","seqId":39,"resType":"M"},{"chain":"B","seqId":40,"resType":"N"}
+          ]
+        },
+        {
+          "id": "cdr_h2", "label": "CDR-H2", "color": "#4169E1", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"B","seqId":50,"resType":"Y"},{"chain":"B","seqId":51,"resType":"G"},
+            {"chain":"B","seqId":52,"resType":"S"},{"chain":"B","seqId":53,"resType":"G"},
+            {"chain":"B","seqId":54,"resType":"R"},{"chain":"B","seqId":55,"resType":"T"},
+            {"chain":"B","seqId":56,"resType":"D"}
+          ]
+        },
+        {
+          "id": "cdr_h3", "label": "CDR-H3", "color": "#0055CC", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"B","seqId":95,"resType":"C"},{"chain":"B","seqId":96,"resType":"A"},
+            {"chain":"B","seqId":97,"resType":"R"},{"chain":"B","seqId":98,"resType":"D"},
+            {"chain":"B","seqId":99,"resType":"A"},{"chain":"B","seqId":100,"resType":"D"},
+            {"chain":"B","seqId":101,"resType":"Y"},{"chain":"B","seqId":102,"resType":"G"}
+          ]
+        },
+        {
+          "id": "cdr_l1", "label": "CDR-L1", "color": "#00CED1", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"A","seqId":24,"resType":"E"},{"chain":"A","seqId":25,"resType":"P"},
+            {"chain":"A","seqId":26,"resType":"D"},{"chain":"A","seqId":27,"resType":"I"},
+            {"chain":"A","seqId":28,"resType":"K"},{"chain":"A","seqId":29,"resType":"L"},
+            {"chain":"A","seqId":30,"resType":"S"},{"chain":"A","seqId":31,"resType":"D"},
+            {"chain":"A","seqId":32,"resType":"I"},{"chain":"A","seqId":33,"resType":"V"},
+            {"chain":"A","seqId":34,"resType":"I"}
+          ]
+        },
+        {
+          "id": "cdr_l2", "label": "CDR-L2", "color": "#20B2AA", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"A","seqId":50,"resType":"E"},{"chain":"A","seqId":51,"resType":"G"},
+            {"chain":"A","seqId":52,"resType":"K"},{"chain":"A","seqId":53,"resType":"D"},
+            {"chain":"A","seqId":54,"resType":"E"},{"chain":"A","seqId":55,"resType":"L"},
+            {"chain":"A","seqId":56,"resType":"S"}
+          ]
+        },
+        {
+          "id": "cdr_l3", "label": "CDR-L3", "color": "#008B8B", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"A","seqId":89,"resType":"D"},{"chain":"A","seqId":90,"resType":"A"},
+            {"chain":"A","seqId":91,"resType":"G"},{"chain":"A","seqId":92,"resType":"T"},
+            {"chain":"A","seqId":93,"resType":"Y"},{"chain":"A","seqId":94,"resType":"K"},
+            {"chain":"A","seqId":95,"resType":"C"},{"chain":"A","seqId":96,"resType":"Y"},
+            {"chain":"A","seqId":97,"resType":"I"}
+          ]
+        },
+        {
+          "id": "epitope", "label": "Epitope", "color": "#CC44FF", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"C","seqId":37,"resType":"Y"},{"chain":"C","seqId":47,"resType":"L"},
+            {"chain":"C","seqId":50,"resType":"Y"},{"chain":"C","seqId":90,"resType":"Q"},
+            {"chain":"C","seqId":92,"resType":"Y"},{"chain":"C","seqId":97,"resType":"L"},
+            {"chain":"C","seqId":98,"resType":"Y"}
+          ]
+        }
+      ]
+    },
+    "AHo": {
+      "groups": [
+        {
+          "id": "cdr_h1", "label": "CDR-H1", "color": "#1E90FF", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"B","seqId":28,"resType":"G"},{"chain":"B","seqId":29,"resType":"F"},
+            {"chain":"B","seqId":30,"resType":"I"},{"chain":"B","seqId":31,"resType":"V"},
+            {"chain":"B","seqId":32,"resType":"S"},{"chain":"B","seqId":33,"resType":"R"},
+            {"chain":"B","seqId":34,"resType":"N"},{"chain":"B","seqId":35,"resType":"Y"},
+            {"chain":"B","seqId":36,"resType":"M"},{"chain":"B","seqId":37,"resType":"N"}
+          ]
+        },
+        {
+          "id": "cdr_h2", "label": "CDR-H2", "color": "#4169E1", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"B","seqId":57,"resType":"Y"},{"chain":"B","seqId":58,"resType":"G"},
+            {"chain":"B","seqId":59,"resType":"S"},{"chain":"B","seqId":60,"resType":"G"},
+            {"chain":"B","seqId":61,"resType":"R"},{"chain":"B","seqId":62,"resType":"T"},
+            {"chain":"B","seqId":63,"resType":"D"}
+          ]
+        },
+        {
+          "id": "cdr_h3", "label": "CDR-H3", "color": "#0055CC", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"B","seqId":109,"resType":"C"},{"chain":"B","seqId":110,"resType":"A"},
+            {"chain":"B","seqId":111,"resType":"R"},{"chain":"B","seqId":112,"resType":"D"},
+            {"chain":"B","seqId":113,"resType":"A"},{"chain":"B","seqId":114,"resType":"D"},
+            {"chain":"B","seqId":115,"resType":"Y"},{"chain":"B","seqId":116,"resType":"G"}
+          ]
+        },
+        {
+          "id": "cdr_l1", "label": "CDR-L1", "color": "#00CED1", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"A","seqId":28,"resType":"E"},{"chain":"A","seqId":29,"resType":"P"},
+            {"chain":"A","seqId":30,"resType":"D"},{"chain":"A","seqId":31,"resType":"I"},
+            {"chain":"A","seqId":32,"resType":"K"},{"chain":"A","seqId":33,"resType":"L"},
+            {"chain":"A","seqId":34,"resType":"S"},{"chain":"A","seqId":35,"resType":"D"},
+            {"chain":"A","seqId":36,"resType":"I"},{"chain":"A","seqId":37,"resType":"V"},
+            {"chain":"A","seqId":38,"resType":"I"}
+          ]
+        },
+        {
+          "id": "cdr_l2", "label": "CDR-L2", "color": "#20B2AA", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"A","seqId":58,"resType":"E"},{"chain":"A","seqId":59,"resType":"G"},
+            {"chain":"A","seqId":60,"resType":"K"},{"chain":"A","seqId":61,"resType":"D"},
+            {"chain":"A","seqId":62,"resType":"E"},{"chain":"A","seqId":63,"resType":"L"},
+            {"chain":"A","seqId":64,"resType":"S"}
+          ]
+        },
+        {
+          "id": "cdr_l3", "label": "CDR-L3", "color": "#008B8B", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"A","seqId":91,"resType":"D"},{"chain":"A","seqId":92,"resType":"A"},
+            {"chain":"A","seqId":93,"resType":"G"},{"chain":"A","seqId":94,"resType":"T"},
+            {"chain":"A","seqId":95,"resType":"Y"},{"chain":"A","seqId":96,"resType":"K"},
+            {"chain":"A","seqId":97,"resType":"C"},{"chain":"A","seqId":98,"resType":"Y"},
+            {"chain":"A","seqId":99,"resType":"I"}
+          ]
+        },
+        {
+          "id": "epitope", "label": "Epitope", "color": "#CC44FF", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"C","seqId":37,"resType":"Y"},{"chain":"C","seqId":47,"resType":"L"},
+            {"chain":"C","seqId":50,"resType":"Y"},{"chain":"C","seqId":90,"resType":"Q"},
+            {"chain":"C","seqId":92,"resType":"Y"},{"chain":"C","seqId":97,"resType":"L"},
+            {"chain":"C","seqId":98,"resType":"Y"}
+          ]
+        }
+      ]
+    },
+    "ANARCI": {
+      "groups": [
+        {
+          "id": "cdr_h1", "label": "CDR-H1", "color": "#1E90FF", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"B","seqId":27,"resType":"G"},{"chain":"B","seqId":28,"resType":"F"},
+            {"chain":"B","seqId":29,"resType":"I"},{"chain":"B","seqId":30,"resType":"V"},
+            {"chain":"B","seqId":31,"resType":"S"},{"chain":"B","seqId":32,"resType":"R"},
+            {"chain":"B","seqId":33,"resType":"N"},{"chain":"B","seqId":34,"resType":"Y"},
+            {"chain":"B","seqId":35,"resType":"M"},{"chain":"B","seqId":36,"resType":"N"}
+          ]
+        },
+        {
+          "id": "cdr_h2", "label": "CDR-H2", "color": "#4169E1", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"B","seqId":56,"resType":"Y"},{"chain":"B","seqId":57,"resType":"G"},
+            {"chain":"B","seqId":58,"resType":"S"},{"chain":"B","seqId":59,"resType":"G"},
+            {"chain":"B","seqId":60,"resType":"R"},{"chain":"B","seqId":61,"resType":"T"},
+            {"chain":"B","seqId":62,"resType":"D"}
+          ]
+        },
+        {
+          "id": "cdr_h3", "label": "CDR-H3", "color": "#0055CC", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"B","seqId":106,"resType":"C"},{"chain":"B","seqId":107,"resType":"A"},
+            {"chain":"B","seqId":108,"resType":"R"},{"chain":"B","seqId":109,"resType":"D"},
+            {"chain":"B","seqId":110,"resType":"A"},{"chain":"B","seqId":111,"resType":"D"},
+            {"chain":"B","seqId":112,"resType":"Y"},{"chain":"B","seqId":113,"resType":"G"}
+          ]
+        },
+        {
+          "id": "cdr_l1", "label": "CDR-L1", "color": "#00CED1", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"A","seqId":27,"resType":"E"},{"chain":"A","seqId":28,"resType":"P"},
+            {"chain":"A","seqId":29,"resType":"D"},{"chain":"A","seqId":30,"resType":"I"},
+            {"chain":"A","seqId":31,"resType":"K"},{"chain":"A","seqId":32,"resType":"L"},
+            {"chain":"A","seqId":33,"resType":"S"},{"chain":"A","seqId":34,"resType":"D"},
+            {"chain":"A","seqId":35,"resType":"I"},{"chain":"A","seqId":36,"resType":"V"},
+            {"chain":"A","seqId":37,"resType":"I"}
+          ]
+        },
+        {
+          "id": "cdr_l2", "label": "CDR-L2", "color": "#20B2AA", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"A","seqId":55,"resType":"E"},{"chain":"A","seqId":56,"resType":"G"},
+            {"chain":"A","seqId":57,"resType":"K"},{"chain":"A","seqId":58,"resType":"D"},
+            {"chain":"A","seqId":59,"resType":"E"},{"chain":"A","seqId":60,"resType":"L"},
+            {"chain":"A","seqId":61,"resType":"S"}
+          ]
+        },
+        {
+          "id": "cdr_l3", "label": "CDR-L3", "color": "#008B8B", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"A","seqId":104,"resType":"D"},{"chain":"A","seqId":105,"resType":"A"},
+            {"chain":"A","seqId":106,"resType":"G"},{"chain":"A","seqId":107,"resType":"T"},
+            {"chain":"A","seqId":108,"resType":"Y"},{"chain":"A","seqId":109,"resType":"K"},
+            {"chain":"A","seqId":110,"resType":"C"},{"chain":"A","seqId":111,"resType":"Y"},
+            {"chain":"A","seqId":112,"resType":"I"}
+          ]
+        },
+        {
+          "id": "epitope", "label": "Epitope", "color": "#CC44FF", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"C","seqId":37,"resType":"Y"},{"chain":"C","seqId":47,"resType":"L"},
+            {"chain":"C","seqId":50,"resType":"Y"},{"chain":"C","seqId":90,"resType":"Q"},
+            {"chain":"C","seqId":92,"resType":"Y"},{"chain":"C","seqId":97,"resType":"L"},
+            {"chain":"C","seqId":98,"resType":"Y"}
+          ]
+        }
+      ]
+    }
+  }
+}

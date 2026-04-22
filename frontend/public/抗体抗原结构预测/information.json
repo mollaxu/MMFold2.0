@@ -1,0 +1,26 @@
+{
+  "seed": 1829403751,
+  "entities": [
+    {
+      "type": "Protein",
+      "copies": 1,
+      "chain": "A",
+      "label": "Light Chain",
+      "sequence": "SITVTTVASAGNIGEDGILSCTFEPDIKLSDIVIQWLKEGVLGLVHEFKEGKDELSEQDEMFRGRTAVFADQVIVGNASLRLKNVQLTDAGTYKCYIITSKGKGNANLEYKTG"
+    },
+    {
+      "type": "Protein",
+      "copies": 1,
+      "chain": "B",
+      "label": "Heavy Chain",
+      "sequence": "EVQLVESGGGLIQPGGSLRLSCAASGFIVSRNYMNWVRQAPGKGLEWVSVIYGSGRTDSADSVKGRFTISRDNSKNTLYLQMNSLRAEDTAVYYCARDADYGLDVWGQGTTVTVSS"
+    },
+    {
+      "type": "Protein",
+      "copies": 1,
+      "chain": "C",
+      "label": "Antigen",
+      "sequence": "EIVLTQSPGTLSLSPGERATLSCRASQSVSSSYLAWYQQKPGQAPRLLIYGASSRATGIPDRFSGSGSGTDFTLTISRLEPEDFAVYYCQQYGSSPLYTFGQGTKLEIK"
+    }
+  ]
+}

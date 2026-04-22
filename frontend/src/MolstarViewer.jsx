@@ -1,25 +1,33 @@
 import { useEffect, useRef, useState } from 'react'
 
-export default function MolstarViewer({ structureUrl }) {
+export default function MolstarViewer({
+  structureUrl,
+  highlightedResidues,   // [{chain, seqId}] | null — hovered + pinned groups combined
+  focusedResidue,        // {chain, seqId} | null  — selects + focuses residue
+}) {
   const parentRef = useRef(null)
   const pluginRef = useRef(null)
+  const focusRefRef = useRef(null)   // state ref for focused-residue ball-and-stick component
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [structureReady, setStructureReady] = useState(false)
 
+  // ── Init plugin + load structure ──────────────────────────────────
   useEffect(() => {
     if (!parentRef.current) return
 
     let mounted = true
     let plugin = null
     const container = document.createElement('div')
-    container.style.width = '100%'
-    container.style.height = '100%'
+    container.style.cssText = 'width:100%;height:100%'
     parentRef.current.appendChild(container)
 
-    const init = async () => {
+    ;(async () => {
       try {
         setIsLoading(true)
         setError(null)
+        setStructureReady(false)
+        focusRefRef.current = null
 
         const { createPluginUI } = await import('molstar/lib/commonjs/mol-plugin-ui')
         const { renderReact18 } = await import('molstar/lib/commonjs/mol-plugin-ui/react18')
@@ -32,9 +40,7 @@ export default function MolstarViewer({ structureUrl }) {
           render: renderReact18,
           spec: {
             ...DefaultPluginUISpec(),
-            layout: {
-              initial: { isExpanded: false, showControls: false },
-            },
+            layout: { initial: { isExpanded: false, showControls: false } },
             components: { remoteState: 'none' },
           },
         })
@@ -51,41 +57,52 @@ export default function MolstarViewer({ structureUrl }) {
         const { PluginCommands } = await import('molstar/lib/commonjs/mol-plugin/commands')
         const { Color } = await import('molstar/lib/commonjs/mol-util/color')
         PluginCommands.Canvas3D.SetSettings(plugin, {
-          settings: (props) => {
-            props.renderer.backgroundColor = Color(0x1a1d24)
-          },
+          settings: p => { p.renderer.backgroundColor = Color(0x1a1d24) },
         })
 
         await applyPlddtColoring(plugin)
 
-        if (mounted) setIsLoading(false)
+        if (mounted) { setIsLoading(false); setStructureReady(true) }
       } catch (err) {
         console.error('Molstar init failed:', err)
-        if (mounted) {
-          setError(err?.message || 'Failed to load structure')
-          setIsLoading(false)
-        }
+        if (mounted) { setError(err?.message ?? 'Failed to load structure'); setIsLoading(false) }
       }
-    }
-
-    init()
+    })()
 
     return () => {
       mounted = false
-      if (plugin) {
-        try { plugin.dispose() } catch (e) { /* ignore */ }
-      }
+      try { plugin?.dispose() } catch {}
       pluginRef.current = null
+      focusRefRef.current = null
+      setStructureReady(false)
       container.remove()
     }
   }, [structureUrl])
 
+  // ── Highlight: hovered + pinned groups combined ───────────────────
+  useEffect(() => {
+    if (!structureReady || !pluginRef.current) return
+    if (highlightedResidues?.length) {
+      applyGroupHighlight(pluginRef.current, highlightedResidues)
+    } else {
+      clearGroupHighlight(pluginRef.current)
+    }
+  }, [structureReady, highlightedResidues])
+
+  // ── Click: native selection + camera focus + bond display ──────────
+  useEffect(() => {
+    if (!structureReady || !pluginRef.current) return
+    if (focusedResidue) {
+      applyResidueFocus(pluginRef.current, focusedResidue, focusRefRef)
+    } else {
+      clearResidueFocus(pluginRef.current, focusRefRef)
+    }
+  }, [structureReady, focusedResidue])
+
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       {isLoading && (
-        <div className="mol-overlay">
-          <span>Loading 3D structure...</span>
-        </div>
+        <div className="mol-overlay"><span>Loading 3D structure...</span></div>
       )}
       {error && (
         <div className="mol-overlay mol-error">
@@ -97,6 +114,97 @@ export default function MolstarViewer({ structureUrl }) {
     </div>
   )
 }
+
+// ── Helpers ───────────────────────────────────────────────────────────
+
+/** Build a MolScript expression for a set of residues (grouped by chain). */
+async function buildResidueExpression(residues) {
+  const { MolScriptBuilder: MS } = await import('molstar/lib/commonjs/mol-script/language/builder')
+  const byChain = {}
+  for (const { chain, seqId } of residues) {
+    ;(byChain[chain] ??= []).push(seqId)
+  }
+  const exprs = Object.entries(byChain).map(([ch, ids]) =>
+    MS.struct.generator.atomGroups({
+      'chain-test': MS.core.rel.eq([MS.ammp('auth_asym_id'), ch]),
+      'residue-test': MS.core.set.has([MS.set(...ids), MS.ammp('auth_seq_id')]),
+    })
+  )
+  return exprs.length === 1 ? exprs[0] : MS.struct.combinator.merge(exprs)
+}
+
+/** Resolve expression → StructureElement.Loci */
+async function getLoci(plugin, expression) {
+  const { Script } = await import('molstar/lib/commonjs/mol-script/script')
+  const { StructureSelection } = await import('molstar/lib/commonjs/mol-model/structure')
+  const structure = plugin.managers.structure.hierarchy.current.structures[0]?.cell.obj?.data
+  if (!structure) return null
+  const sel = Script.getStructureSelection(expression, structure)
+  return StructureSelection.toLociWithSourceUnits(sel)
+}
+
+// ── Hover highlight ───────────────────────────────────────────────────
+
+async function applyGroupHighlight(plugin, residues) {
+  try {
+    const expression = await buildResidueExpression(residues)
+    const loci = await getLoci(plugin, expression)
+    if (!loci) return
+    plugin.managers.interactivity.lociHighlights.highlightOnly({ loci, repr: void 0 })
+  } catch (err) {
+    console.warn('Group highlight failed:', err)
+  }
+}
+
+function clearGroupHighlight(plugin) {
+  try {
+    plugin.managers.interactivity.lociHighlights.clearHighlights()
+  } catch (err) {
+    console.warn('Clear highlight failed:', err)
+  }
+}
+
+// ── Residue focus (native focus manager: surroundings + interactions + camera) ──
+
+async function applyResidueFocus(plugin, residue, focusRefRef) {
+  const { MolScriptBuilder: MS } = await import('molstar/lib/commonjs/mol-script/language/builder')
+
+  if (!plugin.managers.structure.hierarchy.current.structures.length) return
+
+  // Clear previous focus first
+  clearResidueFocus(plugin, focusRefRef)
+
+  const { chain, seqId } = residue
+  const expression = MS.struct.generator.atomGroups({
+    'chain-test': MS.core.rel.eq([MS.ammp('auth_asym_id'), chain]),
+    'residue-test': MS.core.rel.eq([MS.ammp('auth_seq_id'), seqId]),
+  })
+
+  let loci = null
+  try { loci = await getLoci(plugin, expression) } catch {}
+  if (!loci) return
+
+  // Use the native focus manager — identical to clicking directly in the viewport:
+  // renders the residue + surrounding shell + interaction lines automatically
+  try {
+    plugin.managers.structure.focus.setFromLoci(loci)
+  } catch (err) {
+    console.warn('Focus manager failed:', err)
+  }
+
+  // Camera focus
+  try {
+    plugin.managers.camera.focusLoci(loci, { durationMs: 500 })
+  } catch {}
+}
+
+function clearResidueFocus(plugin, focusRefRef) {
+  focusRefRef.current = null
+  try { plugin.managers.structure.focus.clear() } catch {}
+  try { plugin.managers.structure.selection.clear() } catch {}
+}
+
+// ── pLDDT coloring ────────────────────────────────────────────────────
 
 async function applyPlddtColoring(plugin) {
   try {
@@ -146,8 +254,7 @@ async function applyPlddtColoring(plugin) {
     await plugin.dataTransaction(async () => {
       for (const s of plugin.managers.structure.hierarchy.current.structures) {
         await plugin.managers.structure.component.updateRepresentationsTheme(
-          s.components,
-          { color: themeName || 'plddt-confidence' }
+          s.components, { color: themeName || 'plddt-confidence' }
         )
       }
     })
