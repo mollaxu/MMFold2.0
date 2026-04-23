@@ -1,22 +1,66 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useCallback } from 'react'
 import AppHeader from './AppHeader'
 import './HomePage.css'
 
 // ── Mock data ──────────────────────────────────────────────────────
 
-const MOCK_JOBS = [
+const INITIAL_JOBS = [
   { id: '4d4784ff-d4e5-7f6a-1b2c-3d4e5f6a7b8c', name: '酶-小分子 Docking',  status: 'COMPLETED', duration: '2m 8s',  updatedAt: Date.now() - 2 * 3600 * 1000,  type: 'enzyme' },
   { id: '3cf3c319-a1b2-4c3d-8e9f-0a1b2c3d4e5f', name: '抗体抗原结构预测',    status: 'COMPLETED', duration: '5m 21s', updatedAt: Date.now() - 23 * 3600 * 1000, type: 'antibody' },
 ]
 
-const ALL_STATUSES = ['DRAFT', 'RUNNING', 'COMPLETED', 'FAILED']
+function genId() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16)
+  })
+}
+
+function deriveJobName(entries) {
+  const types = new Set(entries.map(e => e.type))
+  if (types.has('ligand') && types.has('protein')) return 'Enzyme-Ligand Docking'
+  if (types.has('protein') && entries.length > 1)  return 'Protein Complex Prediction'
+  return 'Structure Prediction'
+}
+
+const ALL_STATUSES = ['RUNNING', 'COMPLETED', 'FAILED']
 const PAGE_SIZE_OPTIONS = [10, 25, 50]
 
 const STATUS_CONFIG = {
-  DRAFT:     { label: 'Draft',     color: 'status-draft',     icon: '📄' },
   RUNNING:   { label: 'Running',   color: 'status-running',   icon: '↻'  },
   COMPLETED: { label: 'Completed', color: 'status-completed', icon: '✓'  },
   FAILED:    { label: 'Failed',    color: 'status-failed',    icon: '✕'  },
+}
+
+// ── Parsers ────────────────────────────────────────────────────────
+
+function inferSequenceType(seq) {
+  const upper = seq.toUpperCase().replace(/\s/g, '')
+  if (/^[ACGTU]+$/.test(upper)) return /U/.test(upper) ? 'rna' : 'dna'
+  return 'protein'
+}
+
+function parseFasta(text) {
+  const blocks = text.split(/^>/m).filter(Boolean)
+  if (blocks.length === 0) throw new Error('No sequences found in FASTA file')
+  return blocks.map(block => {
+    const lines = block.trim().split('\n')
+    const sequence = lines.slice(1).join('').replace(/\s/g, '').toUpperCase()
+    if (!sequence) throw new Error('Empty sequence found in FASTA file')
+    return { uid: uidCounter++, type: inferSequenceType(sequence), copies: 1, sequence }
+  })
+}
+
+function parseJson(text) {
+  const obj = JSON.parse(text)
+  const list = Array.isArray(obj) ? obj : (obj.entities ?? obj.sequences ?? null)
+  if (!list || list.length === 0) throw new Error('No entities found in JSON file')
+  return list.map(item => ({
+    uid: uidCounter++,
+    type: item.type ?? 'protein',
+    copies: item.copies ?? 1,
+    sequence: item.sequence ?? item.smiles ?? '',
+  }))
 }
 
 function formatTimeAgo(ts) {
@@ -100,22 +144,155 @@ function EntityCard({ entityType, setEntityType, copies, setCopies, sequence, se
   )
 }
 
+// ── ImportButton ───────────────────────────────────────────────────
+
+function ImportButton({ onParsed, onError }) {
+  const [open, setOpen] = useState(false)
+  const fastaRef = useRef(null)
+  const jsonRef  = useRef(null)
+  const wrapRef  = useRef(null)
+
+  const handleFile = useCallback((file) => {
+    if (!file) return
+    setOpen(false)
+    const ext = file.name.split('.').pop().toLowerCase()
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const parsed = ext === 'json' ? parseJson(e.target.result) : parseFasta(e.target.result)
+        onParsed(parsed)
+      } catch (err) {
+        onError(err.message)
+      }
+    }
+    reader.readAsText(file)
+  }, [onParsed, onError])
+
+  return (
+    <div ref={wrapRef} style={{ position: 'relative' }}>
+      <button className="home-btn-outline" onClick={() => setOpen(o => !o)}>
+        ⬆ Import
+      </button>
+      {open && (
+        <div className="import-dropdown" onMouseLeave={() => setOpen(false)}>
+          <button className="import-dropdown-item" onClick={() => fastaRef.current?.click()}>
+            Upload FASTA
+          </button>
+          <button className="import-dropdown-item" onClick={() => jsonRef.current?.click()}>
+            Upload JSON
+          </button>
+        </div>
+      )}
+      <input ref={fastaRef} type="file" accept=".fasta,.fa,.txt" style={{ display: 'none' }}
+        onChange={e => { handleFile(e.target.files?.[0]); e.target.value = '' }} />
+      <input ref={jsonRef}  type="file" accept=".json" style={{ display: 'none' }}
+        onChange={e => { handleFile(e.target.files?.[0]); e.target.value = '' }} />
+    </div>
+  )
+}
+
+// ── JobPreviewModal ────────────────────────────────────────────────
+
+function JobPreviewModal({ entries, onConfirm, onClose }) {
+  const [jobName, setJobName]     = useState('')
+  const [seedEnabled, setSeed]    = useState(false)
+  const [seedValue, setSeedValue] = useState('')
+
+  const handleConfirm = () => {
+    if (!jobName.trim()) { document.getElementById('jp-name-input')?.focus(); return }
+    onConfirm({ jobName: jobName.trim(), seed: seedEnabled ? (seedValue || 'auto') : 'auto' })
+  }
+
+  return (
+    <div className="jp-overlay" onClick={onClose}>
+      <div className="jp-modal" onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
+        <div className="jp-header">
+          <h2 className="jp-title">Job Preview</h2>
+          <button className="jp-close" onClick={onClose}>✕</button>
+        </div>
+
+        {/* Job name */}
+        <input
+          id="jp-name-input"
+          className="jp-name-input"
+          placeholder="Job name*"
+          value={jobName}
+          onChange={e => setJobName(e.target.value)}
+        />
+
+        {/* Seed row */}
+        <div className="jp-seed-row">
+          <div className="jp-seed-field">
+            {seedEnabled
+              ? <input className="jp-seed-input" placeholder="Enter seed" value={seedValue} onChange={e => setSeedValue(e.target.value)} />
+              : <span className="jp-seed-auto">Seed: Auto</span>
+            }
+          </div>
+          <label className="jp-toggle-wrap">
+            <span className="jp-toggle-label">Seed</span>
+            <div className={`jp-toggle ${seedEnabled ? 'on' : ''}`} onClick={() => setSeed(v => !v)}>
+              <div className="jp-toggle-thumb" />
+            </div>
+          </label>
+        </div>
+
+        {/* Entity table */}
+        <div className="jp-section-title">Job 1</div>
+        <div className="jp-table-wrap">
+          <table className="jp-table">
+            <thead>
+              <tr>
+                <th className="jp-th">Type</th>
+                <th className="jp-th">Copies</th>
+                <th className="jp-th">Sequence</th>
+              </tr>
+            </thead>
+            <tbody>
+              {entries.map((e, i) => (
+                <tr key={e.uid ?? i} className="jp-tr">
+                  <td className="jp-td jp-td-type">{e.type.charAt(0).toUpperCase() + e.type.slice(1)}</td>
+                  <td className="jp-td">{e.copies}</td>
+                  <td className="jp-td jp-td-seq">
+                    {e.sequence
+                      ? <span className="jp-seq">{e.sequence.slice(0, 40)}{e.sequence.length > 40 ? '…' : ''}</span>
+                      : <span className="jp-seq-empty">—</span>
+                    }
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Footer actions */}
+        <div className="jp-footer">
+          <button className="jp-back-btn" onClick={onClose}>Go back and edit this job</button>
+          <button className="jp-confirm-btn" onClick={handleConfirm}>Confirm and submit job</button>
+        </div>
+
+      </div>
+    </div>
+  )
+}
+
 // ── JobHistory ─────────────────────────────────────────────────────
 
-function JobHistory({ onViewResult }) {
-  const [search, setSearch]           = useState('')
-  const [activeFilters, setFilters]   = useState([...ALL_STATUSES])
-  const [pageSize, setPageSize]       = useState(10)
-  const [currentPage, setPage]        = useState(1)
-  const [selectedIds, setSelected]    = useState(new Set())
-  const [copiedId, setCopiedId]       = useState(null)
+function JobHistory({ jobs, onViewResult }) {
+  const [search, setSearch]         = useState('')
+  const [activeFilters, setFilters] = useState([...ALL_STATUSES])
+  const [pageSize, setPageSize]     = useState(10)
+  const [currentPage, setPage]      = useState(1)
+  const [selectedIds, setSelected]  = useState(new Set())
+  const [copiedId, setCopiedId]     = useState(null)
 
   const filtered = useMemo(() => {
-    return MOCK_JOBS.filter(j =>
+    return jobs.filter(j =>
       activeFilters.includes(j.status) &&
       (j.name.toLowerCase().includes(search.toLowerCase()) || j.id.includes(search))
     )
-  }, [search, activeFilters])
+  }, [jobs, search, activeFilters])
 
   const total = filtered.length
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
@@ -233,11 +410,51 @@ let uidCounter = 1
 function newEntry() { return { uid: uidCounter++, type: 'protein', copies: 1, sequence: '' } }
 
 export default function HomePage({ onViewResult }) {
-  const [entries, setEntries] = useState([newEntry()])
+  const [entries, setEntries]         = useState([newEntry()])
+  const [jobs, setJobs]               = useState(INITIAL_JOBS)
+  const [importMsg, setImportMsg]     = useState(null)
+  const [importError, setImportError] = useState(null)
+  const [showPreview, setShowPreview] = useState(false)
 
   const updateEntry = (uid, patch) => setEntries(prev => prev.map(e => e.uid === uid ? { ...e, ...patch } : e))
   const removeEntry = (uid) => setEntries(prev => prev.length > 1 ? prev.filter(e => e.uid !== uid) : prev)
   const addEntry    = () => setEntries(prev => [...prev, newEntry()])
+  const clearAll    = () => { setEntries([newEntry()]); setImportMsg(null); setImportError(null) }
+
+  const handleParsed = (parsed) => {
+    setEntries(parsed)
+    setImportError(null)
+    setImportMsg(`${parsed.length} sequence${parsed.length > 1 ? 's' : ''} imported`)
+    setTimeout(() => setImportMsg(null), 3000)
+  }
+
+  const handleImportError = (msg) => {
+    setImportError(msg)
+    setImportMsg(null)
+    setTimeout(() => setImportError(null), 4000)
+  }
+
+  const handleSubmit = ({ jobName }) => {
+    setShowPreview(false)
+    const startTs = Date.now()
+    const newJob = {
+      id: genId(),
+      name: jobName || deriveJobName(entries),
+      status: 'RUNNING',
+      duration: '—',
+      updatedAt: startTs,
+      type: 'enzyme',
+    }
+    setJobs(prev => [newJob, ...prev])
+    const runMs = 2000 + Math.random() * 1500
+    setTimeout(() => {
+      const secs = Math.round(runMs / 1000)
+      const duration = secs < 60 ? `${secs}s` : `${Math.floor(secs / 60)}m ${secs % 60}s`
+      setJobs(prev => prev.map(j =>
+        j.id === newJob.id ? { ...j, status: 'COMPLETED', duration, updatedAt: Date.now() } : j
+      ))
+    }, runMs)
+  }
 
   return (
     <div className="home-page">
@@ -248,10 +465,14 @@ export default function HomePage({ onViewResult }) {
         <div className="home-toolbar">
           <span className="home-quota">Remaining jobs today: <strong>30</strong></span>
           <div className="home-toolbar-actions">
-            <button className="home-btn-outline">⬆ Upload JSON</button>
-            <button className="home-btn-outline">↺ Clear</button>
+            <ImportButton onParsed={handleParsed} onError={handleImportError} />
+            <button className="home-btn-outline" onClick={clearAll}>↺ Clear</button>
           </div>
         </div>
+
+        {/* Import feedback */}
+        {importMsg && <div className="import-notice import-notice-success">✓ {importMsg}</div>}
+        {importError && <div className="import-notice import-notice-error">✕ {importError}</div>}
 
         {/* Entity cards */}
         <div className="home-entities">
@@ -277,15 +498,20 @@ export default function HomePage({ onViewResult }) {
 
         {/* Submit row */}
         <div className="home-submit-row">
-          <button className="home-btn-primary">Continue and preview job</button>
-          <button className="home-btn-outline">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{marginRight:6}}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-            Save job
-          </button>
+          <button className="home-btn-primary" onClick={() => setShowPreview(true)}>Continue and preview job</button>
         </div>
 
         {/* Job history */}
-        <JobHistory onViewResult={onViewResult} />
+        <JobHistory jobs={jobs} onViewResult={onViewResult} />
+
+        {/* Job preview modal */}
+        {showPreview && (
+          <JobPreviewModal
+            entries={entries}
+            onConfirm={handleSubmit}
+            onClose={() => setShowPreview(false)}
+          />
+        )}
       </div>
     </div>
   )
