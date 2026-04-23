@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import MolstarViewer from './MolstarViewer'
 import PAECanvas from './PAECanvas'
 import AppHeader from './AppHeader'
-import { fetchHomologs } from './fetchHomologs'
+
 import './HomePage.css'
 import './ResultPage.css'
 
@@ -46,7 +46,6 @@ export default function ResultPage({ task, onBack }) {
   const [information, setInformation] = useState(null)
   const [promptIndex, setPromptIndex] = useState(0)
   const [activeScheme, setActiveScheme] = useState('IMGT')
-  const [activeTab, setActiveTab] = useState('annotations')
   const [selectedGroupIds, setSelectedGroupIds] = useState(new Set())
   const [homologs, setHomologs] = useState(null)
   const [homologsLoading, setHomologsLoading] = useState(false)
@@ -86,7 +85,6 @@ export default function ResultPage({ task, onBack }) {
     setHoveredGroupId(null)
     setFocusedResidue(null)
     setActiveScheme('IMGT')
-    setActiveTab('annotations')
     setSelectedGroupIds(new Set())
     setHomologs(null)
     setHomologsError(null)
@@ -105,25 +103,15 @@ export default function ResultPage({ task, onBack }) {
       .catch(console.error)
   }, [folder])
 
-  // Sequence to search homologs for (lazy: enzyme → first protein; antibody → heavy chain)
-  const searchSequence = useMemo(() => {
-    if (!information) return null
-    if (taskType === 'antibody') {
-      return information.entities.find(e => e.label === 'Heavy Chain')?.sequence
-        ?? information.entities.find(e => e.type === 'Protein')?.sequence ?? null
-    }
-    return information.entities.find(e => e.type === 'Protein')?.sequence ?? null
-  }, [information, taskType])
-
-  // Lazy-fetch homologs when Homologs tab first opened
+  // Load homologs from static mock file
   useEffect(() => {
-    if (activeTab !== 'homologs' || homologs || homologsLoading || !searchSequence) return
     setHomologsLoading(true)
     setHomologsError(null)
-    fetchHomologs(searchSequence)
-      .then(results => { setHomologs(results); setHomologsLoading(false) })
+    fetch(`/${folder}/homologs.json`)
+      .then(r => r.json())
+      .then(data => { setHomologs(data); setHomologsLoading(false) })
       .catch(err => { setHomologsError(err.message); setHomologsLoading(false) })
-  }, [activeTab, homologs, homologsLoading, searchSequence])
+  }, [folder])
 
   // Resolve active groups based on task type and selected scheme
   const activeGroups = useMemo(() => {
@@ -177,9 +165,11 @@ export default function ResultPage({ task, onBack }) {
       <AppHeader />
 
       <div className="rp-subheader">
-        <button className="rp-back" onClick={onBack}>← Back</button>
-        <span className="rp-task-name">{task?.name ?? 'Result'}</span>
-        <button className="rp-download">⬇ Download</button>
+        <div className="rp-subheader-inner">
+          <button className="rp-back" onClick={onBack}>← Back</button>
+          <span className="rp-task-name">{task?.name ?? 'Result'}</span>
+          <button className="rp-download">⬇ Download</button>
+        </div>
       </div>
 
       <div className="rp-content">
@@ -199,214 +189,184 @@ export default function ResultPage({ task, onBack }) {
           </div>
         </div>
 
-        {/* pLDDT color legend */}
-        <div className="rp-plddt-legend">
-          <div className="rp-plddt-item">
-            <span>Very high (pLDDT &gt; 90)</span>
-            <div className="rp-plddt-bar" style={{ background: '#0066cc' }} />
-          </div>
-          <div className="rp-plddt-item">
-            <span>Confident (90 &gt; pLDDT &gt; 70)</span>
-            <div className="rp-plddt-bar" style={{ background: '#4dd8e8' }} />
-          </div>
-          <div className="rp-plddt-item">
-            <span>Low (70 &gt; pLDDT &gt; 50)</span>
-            <div className="rp-plddt-bar" style={{ background: '#ffdd57' }} />
-          </div>
-          <div className="rp-plddt-item">
-            <span>Very low (pLDDT &lt; 50)</span>
-            <div className="rp-plddt-bar" style={{ background: 'linear-gradient(to right, #ff9933, #ff6600)' }} />
-          </div>
-        </div>
+        {/* Main two-column layout: sticky 3D viewer left, scrollable panels right */}
+        <div className="rp-main-layout">
 
-        {/* ipTM / pTM scores */}
-        {summary && (
-          <div className="rp-metrics">
-            <span className="rp-metric-label">ipTM =</span>
-            <span className="rp-metric-value">{summary.iptm?.toFixed(2) ?? '—'}</span>
-            <span className="rp-metric-label">pTM =</span>
-            <span className="rp-metric-value">{summary.ptm?.toFixed(2) ?? '—'}</span>
-            <a href="#" className="rp-learn-more">learn more</a>
-          </div>
-        )}
+          {/* Row 1: ipTM/pTM | MOS CTA */}
+          {summary ? (
+            <div className="rp-metrics">
+              <span className="rp-metric-label">ipTM =</span>
+              <span className="rp-metric-value">{summary.iptm?.toFixed(2) ?? '—'}</span>
+              <span className="rp-metric-label">pTM =</span>
+              <span className="rp-metric-value">{summary.ptm?.toFixed(2) ?? '—'}</span>
+              <a href="#" className="rp-learn-more">learn more</a>
+            </div>
+          ) : <div />}
+          <button
+            className="rp-mos-btn"
+            onClick={() => window.open(MOS_URL, '_blank', 'noopener,noreferrer')}
+          >
+            <span className="rp-mos-prompt" key={promptIndex}>{prompts[promptIndex]}</span>
+            <span className="rp-mos-action">Go to MOS →</span>
+          </button>
 
-        {/* 3D viewer + Annotations panel */}
-        <div className="rp-viewers">
-          <div className="rp-viewer-card">
-            <MolstarViewer
-              structureUrl={structureUrl}
-              highlightedResidues={highlightedResidues}
-              focusedResidue={focusedResidue}
-            />
-          </div>
-
-          {/* Right column: annotations + MOS CTA */}
-          <div className="rp-right-col">
-            <div className="rp-anno-panel">
-              {/* Tab bar */}
-              <div className="rp-panel-tabs">
-                <button
-                  className={`rp-panel-tab ${activeTab === 'annotations' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('annotations')}
-                >
-                  Annotations
-                </button>
-                <button
-                  className={`rp-panel-tab ${activeTab === 'homologs' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('homologs')}
-                >
-                  Homologs
-                </button>
+          {/* LEFT: sticky 3D viewer + pLDDT legend */}
+          <div className="rp-left-col">
+            <div className="rp-plddt-legend">
+              <div className="rp-plddt-item">
+                <span>Very high (pLDDT &gt; 90)</span>
+                <div className="rp-plddt-bar" style={{ background: '#0066cc' }} />
               </div>
+              <div className="rp-plddt-item">
+                <span>Confident (70–90)</span>
+                <div className="rp-plddt-bar" style={{ background: '#4dd8e8' }} />
+              </div>
+              <div className="rp-plddt-item">
+                <span>Low (50–70)</span>
+                <div className="rp-plddt-bar" style={{ background: '#ffdd57' }} />
+              </div>
+              <div className="rp-plddt-item">
+                <span>Very low (&lt; 50)</span>
+                <div className="rp-plddt-bar" style={{ background: 'linear-gradient(to right, #ff9933, #ff6600)' }} />
+              </div>
+            </div>
+            <div className="rp-viewer-card" style={{ flex: 1, minHeight: 0 }}>
+              <MolstarViewer
+                structureUrl={structureUrl}
+                highlightedResidues={highlightedResidues}
+                focusedResidue={focusedResidue}
+              />
+            </div>
+          </div>
 
-              {/* ── Annotations tab ── */}
-              {activeTab === 'annotations' && (
-                <>
-                  {taskType === 'antibody' && annotations?.schemes && (
-                    <div className="rp-scheme-tabs">
-                      {NUMBERING_SCHEMES.map(s => (
-                        <button
-                          key={s}
-                          className={`rp-scheme-tab ${activeScheme === s ? 'active' : ''}`}
-                          onClick={() => { setActiveScheme(s); setHoveredGroupId(null); setFocusedResidue(null); setSelectedGroupIds(new Set()) }}
-                        >
-                          {s}
-                        </button>
-                      ))}
-                      {selectedGroupIds.size > 0 && (
-                        <button className="rp-scheme-clear" onClick={clearSelections}>
-                          Clear ({selectedGroupIds.size})
-                        </button>
-                      )}
-                    </div>
-                  )}
-                  {!annotations ? (
-                    <div className="rp-anno-loading">Loading annotations...</div>
-                  ) : (
-                    <div className="rp-anno-list">
-                      {activeGroups.map(group => {
-                        const isSelected = selectedGroupIds.has(group.id)
-                        return (
-                        <div
-                          key={group.id}
-                          className={`rp-anno-item ${hoveredGroupId === group.id ? 'hovered' : ''} ${isSelected ? 'selected' : ''}`}
-                          style={{ '--group-color': group.color }}
-                          onMouseEnter={() => setHoveredGroupId(group.id)}
-                          onMouseLeave={() => setHoveredGroupId(null)}
-                        >
-                          <div
-                            className={`rp-anno-item-header ${taskType === 'antibody' ? 'clickable' : ''}`}
-                            onClick={taskType === 'antibody' ? () => toggleGroupSelection(group.id) : undefined}
-                          >
-                            <div className="rp-anno-dot" style={{ background: group.color }} />
-                            <div className="rp-anno-info">
-                              <span className="rp-anno-label">{group.label}</span>
-                              <span className="rp-anno-residues">{group.residues.length} residues</span>
-                            </div>
-                            {taskType === 'antibody' && (
-                              <span className={`rp-anno-pin ${isSelected ? 'pinned' : ''}`} style={{ color: isSelected ? group.color : undefined }}>
-                                {isSelected ? '◉' : '○'}
-                              </span>
-                            )}
-                          </div>
-                          <div className="rp-anno-tags">
-                            {group.residues.map(r => {
-                              const isFocused = focusedResidue?.chain === r.chain && focusedResidue?.seqId === r.seqId
-                              return (
-                                <span
-                                  key={`${r.chain}${r.seqId}`}
-                                  className={`rp-anno-tag ${isFocused ? 'focused' : ''}`}
-                                  style={{ '--tag-color': group.color }}
-                                  onClick={e => handleResidueClick(r, e)}
-                                >
-                                  {r.chain}{r.seqId}{r.resType}
-                                </span>
-                              )
-                            })}
-                          </div>
-                        </div>
-                      )})}
-                    </div>
-                  )}
-                </>
-              )}
+          {/* RIGHT: scrollable panels */}
+          <div className="rp-right-col">
 
-              {/* ── Homologs tab ── */}
-              {activeTab === 'homologs' && (
-                <div className="rp-homologs-list">
-                  {homologsLoading && (
-                    <div className="rp-anno-loading">Searching RCSB PDB...</div>
-                  )}
-                  {homologsError && (
-                    <div className="rp-anno-loading" style={{ color: '#f87171' }}>
-                      Search failed: {homologsError}
-                    </div>
-                  )}
-                  {homologs && homologs.map(h => (
-                    <a
-                      key={h.pdbId}
-                      className="rp-homolog-card"
-                      href={`https://www.rcsb.org/structure/${h.pdbId}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+            {/* Annotations card */}
+            <div className="rp-anno-panel">
+              <div className="rp-anno-header">
+                <span className="rp-anno-title">Annotations</span>
+              </div>
+              {taskType === 'antibody' && annotations?.schemes && (
+                <div className="rp-scheme-tabs">
+                  {NUMBERING_SCHEMES.map(s => (
+                    <button
+                      key={s}
+                      className={`rp-scheme-tab ${activeScheme === s ? 'active' : ''}`}
+                      onClick={() => { setActiveScheme(s); setHoveredGroupId(null); setFocusedResidue(null); setSelectedGroupIds(new Set()) }}
                     >
-                      <div className="rp-homolog-top">
-                        <span className="rp-homolog-id">{h.pdbId}</span>
-                        {h.identity != null && (
-                          <span className="rp-homolog-identity">{h.identity}% identity</span>
-                        )}
-                      </div>
-                      <div className="rp-homolog-title">{h.title}</div>
-                      <div className="rp-homolog-meta">
-                        <span>{h.organism}</span>
-                        {h.resolution != null && <span>{h.resolution.toFixed(1)} Å</span>}
-                        {h.evalue != null && <span>E: {h.evalue}</span>}
-                      </div>
-                    </a>
+                      {s}
+                    </button>
                   ))}
+                  {selectedGroupIds.size > 0 && (
+                    <button className="rp-scheme-clear" onClick={clearSelections}>
+                      Clear ({selectedGroupIds.size})
+                    </button>
+                  )}
+                </div>
+              )}
+              {!annotations ? (
+                <div className="rp-anno-loading">Loading annotations...</div>
+              ) : (
+                <div className="rp-anno-list">
+                  {activeGroups.map(group => {
+                    const isSelected = selectedGroupIds.has(group.id)
+                    return (
+                      <div
+                        key={group.id}
+                        className={`rp-anno-item ${hoveredGroupId === group.id ? 'hovered' : ''} ${isSelected ? 'selected' : ''}`}
+                        style={{ '--group-color': group.color }}
+                        onMouseEnter={() => setHoveredGroupId(group.id)}
+                        onMouseLeave={() => setHoveredGroupId(null)}
+                      >
+                        <div
+                          className={`rp-anno-item-header ${taskType === 'antibody' ? 'clickable' : ''}`}
+                          onClick={taskType === 'antibody' ? () => toggleGroupSelection(group.id) : undefined}
+                        >
+                          <div className="rp-anno-info">
+                            <div className="rp-anno-label-row">
+                              <div className="rp-anno-dot" style={{ background: group.color }} />
+                              <span className="rp-anno-label">{group.label}</span>
+                            </div>
+                            <span className="rp-anno-residues">{group.residues.length} residues</span>
+                          </div>
+                          {taskType === 'antibody' && (
+                            <span className={`rp-anno-pin ${isSelected ? 'pinned' : ''}`} style={{ color: isSelected ? group.color : undefined }}>
+                              {isSelected ? '◉' : '○'}
+                            </span>
+                          )}
+                        </div>
+                        <div className="rp-anno-tags">
+                          {group.residues.map(r => {
+                            const isFocused = focusedResidue?.chain === r.chain && focusedResidue?.seqId === r.seqId
+                            return (
+                              <span
+                                key={`${r.chain}${r.seqId}`}
+                                className={`rp-anno-tag ${isFocused ? 'focused' : ''}`}
+                                style={{ '--tag-color': group.color }}
+                                onClick={e => handleResidueClick(r, e)}
+                              >
+                                {r.chain}{r.seqId}{r.resType}
+                              </span>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               )}
             </div>
 
-            {/* MOS CTA button — separate card below annotations */}
-            <div className="rp-mos-cta">
-              <button
-                className="rp-mos-btn"
-                onClick={() => window.open(MOS_URL, '_blank', 'noopener,noreferrer')}
-              >
-                <span className="rp-mos-prompt" key={promptIndex}>
-                  {prompts[promptIndex]}
+            {/* Homologs card */}
+            <div className="rp-anno-panel">
+              <div className="rp-anno-header">
+                <span className="rp-anno-title">Homologs</span>
+                <span className="rp-anno-count-badge">
+                  {taskType === 'enzyme' ? 'Chain A' : 'Antigen · Chain C'}
                 </span>
-                <span className="rp-mos-action">Go to MOS →</span>
-              </button>
+              </div>
+              <div className="rp-homologs-list">
+                {homologsLoading && <div className="rp-anno-loading">Loading...</div>}
+                {homologsError && (
+                  <div className="rp-anno-loading" style={{ color: '#f87171' }}>Failed to load</div>
+                )}
+                {homologs && homologs.map(h => (
+                  <a
+                    key={h.pdbId}
+                    className="rp-homolog-card"
+                    href={`https://www.rcsb.org/structure/${h.pdbId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <span className="rp-homolog-id">{h.pdbId}</span>
+                    <span className="rp-homolog-identity">{h.identity}%</span>
+                  </a>
+                ))}
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* PAE + Information side by side */}
-        <div className="rp-bottom-row">
-          <div className="rp-bottom-pae">
-            <h2 className="rp-section-title" style={{ marginBottom: 12 }}>
-              Predicted Aligned Error
-            </h2>
-            <div className="rp-viewer-card rp-pae-card">
-              {loadingFull ? (
-                <div className="rp-loading">Loading PAE data...</div>
-              ) : fullData ? (
-                <PAECanvas
-                  paeData={fullData.pae}
-                  tokenChainIds={fullData.token_chain_ids}
-                  tokenResIds={fullData.token_res_ids}
-                />
-              ) : null}
-            </div>
-          </div>
 
-          {information && (
-            <div className="rp-bottom-info">
-              <InformationSection info={information} />
+            {/* PAE */}
+            <div>
+              <h2 className="rp-section-title" style={{ marginBottom: 12 }}>Predicted Aligned Error</h2>
+              <div className="rp-viewer-card rp-pae-card">
+                {loadingFull ? (
+                  <div className="rp-loading">Loading PAE data...</div>
+                ) : fullData ? (
+                  <PAECanvas
+                    paeData={fullData.pae}
+                    tokenChainIds={fullData.token_chain_ids}
+                    tokenResIds={fullData.token_res_ids}
+                  />
+                ) : null}
+              </div>
             </div>
-          )}
+
+            {/* Information */}
+            {information && <InformationSection info={information} />}
+
+          </div>
         </div>
       </div>
     </div>
@@ -455,7 +415,7 @@ function SequenceBlock({ sequence }) {
 function InformationSection({ info }) {
   return (
     <div className="rp-info-section">
-      <h2 className="rp-section-title" style={{ marginBottom: 12 }}>Information</h2>
+      <h2 className="rp-section-title" style={{ marginBottom: 12 }}>Input Information</h2>
       <div className="rp-info-table">
         <div className="rp-info-head">
           <span className="rp-info-col-type">Type</span>

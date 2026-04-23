@@ -37,12 +37,17 @@
 
 /* ── Sub-header ── */
 .rp-subheader {
+  border-bottom: 1px solid #1e1e1e;
+  background: #111;
+}
+.rp-subheader-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 12px 24px;
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 12px 24px;
-  border-bottom: 1px solid #1e1e1e;
-  background: #111;
 }
 .rp-back {
   background: none;
@@ -54,7 +59,7 @@
   border-radius: 4px;
 }
 .rp-back:hover { color: #fff; background: #222; }
-.rp-task-name { font-size: 15px; font-weight: 500; color: #fff; flex: 1; }
+.rp-task-name { font-size: 20px; font-weight: 600; color: #fff; flex: 1; }
 .rp-download {
   background: none;
   border: 1px solid #333;
@@ -68,7 +73,7 @@
 
 /* ── Content ── */
 .rp-content {
-  max-width: 1260px;
+  max-width: 1200px;
   margin: 0 auto;
   width: 100%;
   padding: 24px 24px 48px;
@@ -107,26 +112,34 @@
   border-color: #fff;
 }
 
-/* ── pLDDT legend ── */
+/* ── pLDDT legend (inside left col) ── */
 .rp-plddt-legend {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  gap: 8px;
   background: #161616;
   border: 1px solid #222;
   border-radius: 8px;
-  padding: 16px;
+  padding: 10px 14px;
+  flex-shrink: 0;
 }
 .rp-plddt-item {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: 13px;
-  color: #aaa;
+  gap: 5px;
+  font-size: 11px;
+  color: #888;
 }
 .rp-plddt-bar {
-  height: 6px;
-  border-radius: 3px;
+  height: 4px;
+  border-radius: 2px;
+}
+
+/* ── Metrics row (ipTM/pTM + MOS CTA) ── */
+.rp-metrics-row {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
 }
 
 /* ── Metrics ── */
@@ -139,23 +152,36 @@
   border-radius: 8px;
   padding: 12px 20px;
   font-size: 15px;
+  align-self: stretch;
 }
 .rp-metric-label { color: #888; font-weight: 500; }
 .rp-metric-value { font-family: 'SF Mono', monospace; color: #fff; font-size: 16px; }
 .rp-learn-more { color: #4dd8e8; font-size: 13px; text-decoration: none; margin-left: 8px; }
 .rp-learn-more:hover { text-decoration: underline; }
 
-/* ── Viewers (3D + Annotations side by side) ── */
-.rp-viewers {
+/* ── Main two-column layout ── */
+.rp-main-layout {
   display: grid;
-  grid-template-columns: 3fr 2fr;
+  grid-template-columns: 1fr 1fr;
   gap: 16px;
-  height: 560px;
+  align-items: start;
 }
 @media (max-width: 900px) {
-  .rp-viewers { grid-template-columns: 1fr; height: auto; }
+  .rp-main-layout { grid-template-columns: 1fr; }
+  .rp-left-col { position: static; height: 480px; }
   .rp-plddt-legend { grid-template-columns: repeat(2, 1fr); }
-  .rp-pae-card { height: 400px; }
+}
+
+/* ── Left col: sticky 3D viewer ── */
+.rp-left-col {
+  position: sticky;
+  top: 60px;
+  height: calc(100vh - 76px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
 }
 
 .rp-viewer-card {
@@ -168,16 +194,16 @@
   flex-direction: column;
 }
 
-/* ── Right column wrapper (annotations + MOS CTA) ── */
+/* ── Right column: scrollable stacked panels ── */
 .rp-right-col {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  height: 100%;
-  min-height: 0;
+  gap: 16px;
+  min-width: 0;
+  width: 100%;
 }
 
-/* ── Annotations panel ── */
+/* ── Annotations / Homologs panel ── */
 .rp-anno-panel {
   background: #161616;
   border: 1px solid #222;
@@ -185,24 +211,9 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  flex: 1;
-  min-height: 0;
 }
 
-/* ── Bottom row: PAE + Information side by side ── */
-.rp-bottom-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  align-items: start;
-}
-@media (max-width: 900px) {
-  .rp-bottom-row { grid-template-columns: 1fr; }
-}
-
-.rp-bottom-pae,
-.rp-bottom-info { min-width: 0; }
-
+/* ── PAE card ── */
 .rp-pae-card {
   background: #161616;
   border: 1px solid #222;
@@ -210,11 +221,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  height: 480px;
 }
-
-/* Info section inside bottom-info has no extra top margin */
-.rp-bottom-info .rp-info-section { margin-top: 0; }
 
 /* ── Panel tab bar (Annotations | Homologs) ── */
 .rp-panel-tabs {
@@ -252,16 +259,14 @@
 }
 
 .rp-anno-title {
-  font-size: 13px;
+  font-size: 18px;
   font-weight: 600;
-  color: #ccc;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  color: #fff;
 }
 
 .rp-anno-count-badge {
   font-size: 11px;
-  color: #555;
+  color: #888;
 }
 
 /* ── Homologs list ── */
@@ -274,9 +279,19 @@
   gap: 6px;
 }
 
+.rp-homologs-source {
+  font-size: 11px;
+  color: #555;
+  margin: 0 0 8px;
+  padding: 0 2px;
+  line-height: 1.5;
+}
+
 .rp-homolog-card {
-  display: block;
-  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
   border-radius: 7px;
   border: 1px solid #222;
   background: #111;
@@ -288,13 +303,6 @@
   border-color: #333;
 }
 
-.rp-homolog-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 4px;
-}
-
 .rp-homolog-id {
   font-family: 'SF Mono', 'Menlo', monospace;
   font-size: 13px;
@@ -304,32 +312,13 @@
 }
 
 .rp-homolog-identity {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: #4ade80;
   background: rgba(74, 222, 128, 0.08);
   border: 1px solid rgba(74, 222, 128, 0.2);
   border-radius: 4px;
-  padding: 1px 6px;
-}
-
-.rp-homolog-title {
-  font-size: 12px;
-  color: #bbb;
-  line-height: 1.4;
-  margin-bottom: 6px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.rp-homolog-meta {
-  display: flex;
-  gap: 10px;
-  font-size: 11px;
-  color: #555;
-  flex-wrap: wrap;
+  padding: 2px 8px;
 }
 
 .rp-anno-loading {
@@ -369,17 +358,16 @@
 
 .rp-scheme-clear {
   margin-left: auto;
-  padding: 3px 10px;
-  border-radius: 5px;
-  border: 1px solid #3a2a2a;
+  padding: 3px 4px;
+  border: none;
   background: transparent;
-  color: #f87171;
+  color: #c0605a;
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: color 0.15s;
 }
-.rp-scheme-clear:hover { background: rgba(248,113,113,0.1); border-color: #f87171; }
+.rp-scheme-clear:hover { color: #e07070; }
 
 .rp-anno-pin {
   font-size: 13px;
@@ -420,8 +408,15 @@
 .rp-anno-item-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   padding: 2px 0 4px;
+}
+
+.rp-anno-label-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .rp-anno-item-header.clickable {
   cursor: pointer;
@@ -467,7 +462,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-  padding: 6px 0 6px 22px;
+  padding: 6px 0;
 }
 
 .rp-anno-tag {
@@ -509,17 +504,19 @@
 }
 
 .rp-mos-btn {
-  width: 100%;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  padding: 12px 16px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  align-self: stretch;
+  padding: 12px 20px;
   border-radius: 8px;
   border: 1px solid #5b5fc7;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   cursor: pointer;
-  text-align: left;
+  overflow: hidden;
   transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
 .rp-mos-btn:hover {
@@ -533,10 +530,14 @@
   color: #b0b3e8;
   line-height: 1.4;
   animation: mos-fade-in 0.4s ease;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .rp-mos-action {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 600;
   color: #7b7fd4;
   letter-spacing: 0.02em;
@@ -569,7 +570,6 @@
   flex-direction: column;
   gap: 12px;
   padding: 12px;
-  height: 100%;
 }
 .pae-tooltip {
   z-index: 50;

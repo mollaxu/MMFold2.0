@@ -3,6 +3,15 @@
     "IMGT": {
       "groups": [
         {
+          "id": "epitope", "label": "Epitope", "color": "#CC44FF", "reprType": "ball-and-stick",
+          "residues": [
+            {"chain":"C","seqId":37,"resType":"Y"},{"chain":"C","seqId":47,"resType":"L"},
+            {"chain":"C","seqId":50,"resType":"Y"},{"chain":"C","seqId":90,"resType":"Q"},
+            {"chain":"C","seqId":92,"resType":"Y"},{"chain":"C","seqId":97,"resType":"L"},
+            {"chain":"C","seqId":98,"resType":"Y"}
+          ]
+        },
+        {
           "id": "cdr_h1", "label": "CDR-H1", "color": "#1E90FF", "reprType": "ball-and-stick",
           "residues": [
             {"chain":"B","seqId":27,"resType":"G"},{"chain":"B","seqId":28,"resType":"F"},
@@ -59,7 +68,11 @@
             {"chain":"A","seqId":111,"resType":"C"},{"chain":"A","seqId":112,"resType":"Y"},
             {"chain":"A","seqId":113,"resType":"I"}
           ]
-        },
+        }
+      ]
+    },
+    "Kabat": {
+      "groups": [
         {
           "id": "epitope", "label": "Epitope", "color": "#CC44FF", "reprType": "ball-and-stick",
           "residues": [
@@ -68,11 +81,7 @@
             {"chain":"C","seqId":92,"resType":"Y"},{"chain":"C","seqId":97,"resType":"L"},
             {"chain":"C","seqId":98,"resType":"Y"}
           ]
-        }
-      ]
-    },
-    "Kabat": {
-      "groups": [
+        },
         {
           "id": "cdr_h1", "label": "CDR-H1", "color": "#1E90FF", "reprType": "ball-and-stick",
           "residues": [
@@ -130,7 +139,11 @@
             {"chain":"A","seqId":95,"resType":"C"},{"chain":"A","seqId":96,"resType":"Y"},
             {"chain":"A","seqId":97,"resType":"I"}
           ]
-        },
+        }
+      ]
+    },
+    "EU": {
+      "groups": [
         {
           "id": "epitope", "label": "Epitope", "color": "#CC44FF", "reprType": "ball-and-stick",
           "residues": [
@@ -139,11 +152,7 @@
             {"chain":"C","seqId":92,"resType":"Y"},{"chain":"C","seqId":97,"resType":"L"},
             {"chain":"C","seqId":98,"resType":"Y"}
           ]
-        }
-      ]
-    },
-    "EU": {
-      "groups": [
+        },
         {
           "id": "cdr_h1", "label": "CDR-H1", "color": "#1E90FF", "reprType": "ball-and-stick",
           "residues": [
@@ -201,7 +210,11 @@
             {"chain":"A","seqId":95,"resType":"C"},{"chain":"A","seqId":96,"resType":"Y"},
             {"chain":"A","seqId":97,"resType":"I"}
           ]
-        },
+        }
+      ]
+    },
+    "AHo": {
+      "groups": [
         {
           "id": "epitope", "label": "Epitope", "color": "#CC44FF", "reprType": "ball-and-stick",
           "residues": [
@@ -210,11 +223,7 @@
             {"chain":"C","seqId":92,"resType":"Y"},{"chain":"C","seqId":97,"resType":"L"},
             {"chain":"C","seqId":98,"resType":"Y"}
           ]
-        }
-      ]
-    },
-    "AHo": {
-      "groups": [
+        },
         {
           "id": "cdr_h1", "label": "CDR-H1", "color": "#1E90FF", "reprType": "ball-and-stick",
           "residues": [
@@ -272,7 +281,11 @@
             {"chain":"A","seqId":97,"resType":"C"},{"chain":"A","seqId":98,"resType":"Y"},
             {"chain":"A","seqId":99,"resType":"I"}
           ]
-        },
+        }
+      ]
+    },
+    "ANARCI": {
+      "groups": [
         {
           "id": "epitope", "label": "Epitope", "color": "#CC44FF", "reprType": "ball-and-stick",
           "residues": [
@@ -281,11 +294,7 @@
             {"chain":"C","seqId":92,"resType":"Y"},{"chain":"C","seqId":97,"resType":"L"},
             {"chain":"C","seqId":98,"resType":"Y"}
           ]
-        }
-      ]
-    },
-    "ANARCI": {
-      "groups": [
+        },
         {
           "id": "cdr_h1", "label": "CDR-H1", "color": "#1E90FF", "reprType": "ball-and-stick",
           "residues": [
@@ -342,15 +351,6 @@
             {"chain":"A","seqId":108,"resType":"Y"},{"chain":"A","seqId":109,"resType":"K"},
             {"chain":"A","seqId":110,"resType":"C"},{"chain":"A","seqId":111,"resType":"Y"},
             {"chain":"A","seqId":112,"resType":"I"}
-          ]
-        },
-        {
-          "id": "epitope", "label": "Epitope", "color": "#CC44FF", "reprType": "ball-and-stick",
-          "residues": [
-            {"chain":"C","seqId":37,"resType":"Y"},{"chain":"C","seqId":47,"resType":"L"},
-            {"chain":"C","seqId":50,"resType":"Y"},{"chain":"C","seqId":90,"resType":"Q"},
-            {"chain":"C","seqId":92,"resType":"Y"},{"chain":"C","seqId":97,"resType":"L"},
-            {"chain":"C","seqId":98,"resType":"Y"}
           ]
         }
       ]
