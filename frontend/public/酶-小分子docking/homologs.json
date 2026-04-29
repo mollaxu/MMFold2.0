@@ -1,7 +1,7 @@
 [
-  { "pdbId": "5XFZ", "identity": 100 },
-  { "pdbId": "5XH2", "identity": 100 },
-  { "pdbId": "7XTW", "identity": 100 },
-  { "pdbId": "7CY0", "identity": 100 },
-  { "pdbId": "5XG0", "identity": 99 }
+  { "pdbId": "5XFZ", "identity": 100, "structureUrl": "/homologs/enzyme/5XFZ.cif" },
+  { "pdbId": "5XH2", "identity": 100, "structureUrl": "/homologs/enzyme/5XH2.cif" },
+  { "pdbId": "7XTW", "identity": 100, "structureUrl": "/homologs/enzyme/7XTW.cif" },
+  { "pdbId": "7CY0", "identity": 100, "structureUrl": "/homologs/enzyme/7CY0.cif" },
+  { "pdbId": "5XG0", "identity": 99, "structureUrl": "/homologs/enzyme/5XG0.cif" }
 ]

@@ -1,7 +1,7 @@
 [
-  { "pdbId": "8GC1", "identity": 99 },
-  { "pdbId": "8UT3", "identity": 98 },
-  { "pdbId": "7ZCE", "identity": 99 },
-  { "pdbId": "7ZF3", "identity": 97 },
-  { "pdbId": "7S4S", "identity": 95 }
+  { "pdbId": "8GC1", "identity": 99, "structureUrl": "/homologs/antibody/8GC1.cif" },
+  { "pdbId": "8UT3", "identity": 98, "structureUrl": "/homologs/antibody/8UT3.cif" },
+  { "pdbId": "7ZCE", "identity": 99, "structureUrl": "/homologs/antibody/7ZCE.cif" },
+  { "pdbId": "7ZF3", "identity": 97, "structureUrl": "/homologs/antibody/7ZF3.cif" },
+  { "pdbId": "7S4S", "identity": 95, "structureUrl": "/homologs/antibody/7S4S.cif" }
 ]
