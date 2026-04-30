@@ -190,7 +190,7 @@ export default function MolstarViewer({
       if (superimposeRef.current) {
         await removeSuperimpose(plugin, superimposeRef)
       }
-      await loadSuperimpose(plugin, superimposeUrl, superimposeRef)
+      await loadSuperimpose(plugin, superimposeUrl, superimposeRef, taskTypeRef.current)
     })()
   }, [structureReady, superimposeUrl])
 
@@ -411,9 +411,23 @@ async function applyAntibodySurface(plugin) {
 
 // ── Superimpose ──────────────────────────────────────────────────────
 
-async function loadSuperimpose(plugin, url, ref) {
+async function loadSuperimpose(plugin, url, ref, taskType = 'enzyme') {
   try {
     const { Color } = await import('molstar/lib/commonjs/mol-util/color')
+    const { MolScriptBuilder: MS } = await import('molstar/lib/commonjs/mol-script/language/builder')
+    const { compile } = await import('molstar/lib/commonjs/mol-script/runtime/query/compiler')
+    const { StructureSelection, StructureElement, QueryContext } = await import(
+      'molstar/lib/commonjs/mol-model/structure'
+    )
+    const { alignAndSuperpose } = await import(
+      'molstar/lib/commonjs/mol-model/structure/structure/util/superposition'
+    )
+    const { StateTransforms } = await import('molstar/lib/commonjs/mol-plugin-state/transforms')
+
+    const mainStructures = plugin.managers.structure.hierarchy.current.structures
+    if (!mainStructures.length) return
+    const mainStructureData = mainStructures[0].cell.obj?.data
+    if (!mainStructureData) return
 
     const data = await plugin.builders.data.download(
       { url, isBinary: false, label: 'homolog' },
@@ -421,20 +435,46 @@ async function loadSuperimpose(plugin, url, ref) {
     )
     const format = url.endsWith('.cif') || url.endsWith('.mmcif') ? 'mmcif' : 'pdb'
     const trajectory = await plugin.builders.structure.parseTrajectory(data, format)
-    const preset = await plugin.builders.structure.hierarchy.applyPreset(trajectory, 'default')
+    const model = await plugin.builders.structure.createModel(trajectory)
+    const structure = await plugin.builders.structure.createStructure(model)
 
-    ref.current = { data: data.ref, trajectory: trajectory.ref }
+    ref.current = { data: data.ref }
 
-    const structures = plugin.managers.structure.hierarchy.current.structures
-    if (structures.length < 2) return
+    const homologData = structure.cell?.obj?.data
+    if (!homologData) return
 
-    const homologStructure = structures[structures.length - 1]
-    for (const c of homologStructure.components) {
-      if (!c.representations?.length) continue
-      for (const r of c.representations) {
-        await plugin.managers.structure.hierarchy.remove([r], true)
+    const mainCaQuery = compile(MS.struct.generator.atomGroups({
+      'atom-test': MS.core.rel.eq([
+        MS.struct.atomProperty.macromolecular.label_atom_id(), 'CA'
+      ]),
+      ...(taskType === 'antibody' ? {
+        'chain-test': MS.core.rel.eq([MS.ammp('auth_asym_id'), 'A']),
+      } : {}),
+    }))
+    const homologCaQuery = compile(MS.struct.generator.atomGroups({
+      'atom-test': MS.core.rel.eq([
+        MS.struct.atomProperty.macromolecular.label_atom_id(), 'CA'
+      ]),
+    }))
+    const sel1 = StructureSelection.toLociWithCurrentUnits(mainCaQuery(new QueryContext(mainStructureData)))
+    const sel2 = StructureSelection.toLociWithCurrentUnits(homologCaQuery(new QueryContext(homologData)))
+
+    if (StructureElement.Loci.size(sel1) > 0 && StructureElement.Loci.size(sel2) > 0) {
+      const transforms = alignAndSuperpose([sel1, sel2])
+      if (transforms.length > 0) {
+        const b = plugin.state.data.build().to(structure)
+          .insert(StateTransforms.Model.TransformStructureConformation, {
+            transform: { name: 'matrix', params: { data: transforms[0].bTransform, transpose: false } }
+          })
+        await plugin.runTask(plugin.state.data.updateTree(b))
       }
-      await plugin.builders.structure.representation.addRepresentation(c.cell, {
+    }
+
+    const component = await plugin.builders.structure.tryCreateComponentFromExpression(
+      structure, MS.struct.generator.atomGroups({}), 'homolog-all', { label: 'Homolog' }
+    )
+    if (component) {
+      await plugin.builders.structure.representation.addRepresentation(component, {
         type: 'cartoon',
         color: 'uniform',
         colorParams: { value: Color(0x88aaff) },

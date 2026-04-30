@@ -1,0 +1,7 @@
+[
+  { "pdbId": "4NFE", "identity": 100, "structureUrl": "/homologs/antibody-new/4NFE.cif" },
+  { "pdbId": "4NFF", "identity": 100, "structureUrl": "/homologs/antibody-new/4NFF.cif" },
+  { "pdbId": "2ZCH", "identity": 79, "structureUrl": "/homologs/antibody-new/2ZCH.cif" },
+  { "pdbId": "2ZCK", "identity": 79, "structureUrl": "/homologs/antibody-new/2ZCK.cif" },
+  { "pdbId": "2ZCL", "identity": 79, "structureUrl": "/homologs/antibody-new/2ZCL.cif" }
+]

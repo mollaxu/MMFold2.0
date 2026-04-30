@@ -6,7 +6,8 @@ import './HomePage.css'
 
 const INITIAL_JOBS = [
   { id: '4d4784ff-d4e5-7f6a-1b2c-3d4e5f6a7b8c', name: '酶-小分子 Docking',  status: 'COMPLETED', duration: '2m 8s',  updatedAt: Date.now() - 2 * 3600 * 1000,  type: 'enzyme' },
-  { id: '3cf3c319-a1b2-4c3d-8e9f-0a1b2c3d4e5f', name: '抗体抗原结构预测',    status: 'COMPLETED', duration: '5m 21s', updatedAt: Date.now() - 23 * 3600 * 1000, type: 'antibody' },
+  // { id: '3cf3c319-a1b2-4c3d-8e9f-0a1b2c3d4e5f', name: '抗体抗原结构预测',    status: 'COMPLETED', duration: '5m 21s', updatedAt: Date.now() - 23 * 3600 * 1000, type: 'antibody' },
+  { id: 'a7b8c9d0-e1f2-4a3b-9c0d-1e2f3a4b5c6d', name: '抗体结构预测-新',     status: 'COMPLETED', duration: '4m 35s', updatedAt: Date.now() - 5 * 3600 * 1000,  type: 'antibody', folder: '抗体结构预测-新' },
 ]
 
 function genId() {

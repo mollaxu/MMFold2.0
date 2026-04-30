@@ -1,9 +1,9 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, Fragment } from 'react'
 import MolstarViewer from './MolstarViewer'
 import PAECanvas from './PAECanvas'
 import AppHeader from './AppHeader'
 import { scanEntities } from './liabilityScanner'
-import { analyzeInteractions } from './interactionAnalyzer'
+import { analyzeInteractions, analyzeProteinProteinInteractions } from './interactionAnalyzer'
 
 import './HomePage.css'
 import './ResultPage.css'
@@ -58,7 +58,7 @@ const MOCK_SEARCH_RESULTS = {
 }
 
 export default function ResultPage({ task, onBack }) {
-  const folder = FOLDERS[task?.type] ?? FOLDERS.enzyme
+  const folder = task?.folder ?? FOLDERS[task?.type] ?? FOLDERS.enzyme
   const [activeSample, setActiveSample] = useState(0)
   const [summaries, setSummaries] = useState([])
   const [fullData, setFullData] = useState(null)
@@ -85,6 +85,7 @@ export default function ResultPage({ task, onBack }) {
   const [liabilityOpen, setLiabilityOpen] = useState(new Set())
   const [interactions, setInteractions] = useState(null)
   const [interactionsLoading, setInteractionsLoading] = useState(false)
+  const [hoveredIxResidue, setHoveredIxResidue] = useState(null)
 
   const taskType = task?.type === 'antibody' ? 'antibody' : 'enzyme'
   const prompts = MOS_PROMPTS[taskType]
@@ -180,8 +181,11 @@ export default function ResultPage({ task, onBack }) {
     if (focusedResidue) {
       residues.push(focusedResidue)
     }
+    if (hoveredIxResidue) {
+      residues.push(hoveredIxResidue)
+    }
     return residues.length > 0 ? residues : null
-  }, [hoveredGroupId, selectedGroupIds, activeGroups, focusedResidue])
+  }, [hoveredGroupId, selectedGroupIds, activeGroups, focusedResidue, hoveredIxResidue])
 
   const toggleGroupSelection = (groupId) => {
     setSelectedGroupIds(prev => {
@@ -205,16 +209,31 @@ export default function ResultPage({ task, onBack }) {
     )
   }
 
-  // Compute interactions from PDB when sample changes (enzyme only)
+  // Resolve antibody / antigen chains from information
+  const { abChains, agChains } = useMemo(() => {
+    if (taskType !== 'antibody' || !information?.entities) return { abChains: [], agChains: [] }
+    const ab = [], ag = []
+    for (const e of information.entities) {
+      const lbl = (e.label || '').toLowerCase()
+      if (lbl.includes('heavy') || lbl.includes('light')) ab.push(e.chain)
+      else if (lbl.includes('antigen')) ag.push(e.chain)
+    }
+    return { abChains: ab, agChains: ag }
+  }, [taskType, information])
+
+  // Compute interactions from PDB when sample changes
   useEffect(() => {
-    if (taskType !== 'enzyme') { setInteractions(null); return }
+    if (taskType === 'antibody' && (abChains.length === 0 || agChains.length === 0)) return
     const url = `/${folder}/model_sample_${activeSample + 1}.pdb`
     setInteractionsLoading(true)
     setInteractions(null)
-    analyzeInteractions(url)
+    const promise = taskType === 'enzyme'
+      ? analyzeInteractions(url)
+      : analyzeProteinProteinInteractions(url, abChains, agChains)
+    promise
       .then(data => { setInteractions(data); setInteractionsLoading(false) })
       .catch(() => setInteractionsLoading(false))
-  }, [folder, activeSample, taskType])
+  }, [folder, activeSample, taskType, abChains, agChains])
 
   const structureUrl = `/${folder}/model_sample_${activeSample + 1}.pdb`
   const superimposeUrl = superimposeId
@@ -364,6 +383,11 @@ export default function ResultPage({ task, onBack }) {
               <div className="rp-anno-header">
                 <span className="rp-anno-title">Homologs</span>
               </div>
+              <div className="rp-homolog-source-hint">
+                {taskType === 'antibody'
+                  ? 'Searched by antigen sequence similarity'
+                  : 'Searched by enzyme sequence similarity'}
+              </div>
               {HOMOLOG_SEARCH_ENABLED && (
                 <>
                   <div className="rp-hsearch-tabs">
@@ -500,8 +524,8 @@ export default function ResultPage({ task, onBack }) {
                         onMouseLeave={() => setHoveredGroupId(null)}
                       >
                         <div
-                          className={`rp-anno-item-header ${taskType === 'antibody' ? 'clickable' : ''}`}
-                          onClick={taskType === 'antibody' ? () => toggleGroupSelection(group.id) : undefined}
+                          className="rp-anno-item-header clickable"
+                          onClick={() => toggleGroupSelection(group.id)}
                         >
                           <div className="rp-anno-info">
                             <div className="rp-anno-label-row">
@@ -510,11 +534,9 @@ export default function ResultPage({ task, onBack }) {
                             </div>
                             <span className="rp-anno-residues">{group.residues.length} residues</span>
                           </div>
-                          {taskType === 'antibody' && (
-                            <span className={`rp-anno-pin ${isSelected ? 'pinned' : ''}`} style={{ color: isSelected ? group.color : undefined }}>
-                              {isSelected ? '◉' : '○'}
-                            </span>
-                          )}
+                          <span className={`rp-anno-pin ${isSelected ? 'pinned' : ''}`} style={{ color: isSelected ? group.color : undefined }}>
+                            {isSelected ? '◉' : '○'}
+                          </span>
                         </div>
                         <div className="rp-anno-tags">
                           {group.residues.map(r => {
@@ -539,20 +561,24 @@ export default function ResultPage({ task, onBack }) {
             </div>
 
 
-            {/* Interactions (enzyme only) */}
-            {taskType === 'enzyme' && (
-              <InteractionsCard
-                interactions={interactions}
-                loading={interactionsLoading}
-                focusedResidue={focusedResidue}
-                onRowClick={(row) => {
-                  const r = { chain: row.acceptorChain, seqId: row.acceptorPosition, resType: row.acceptorResidue }
-                  setFocusedResidue(prev =>
-                    prev?.chain === r.chain && prev?.seqId === r.seqId ? null : r
-                  )
-                }}
-              />
-            )}
+            {/* Interactions */}
+            <InteractionsCard
+              interactions={interactions}
+              loading={interactionsLoading}
+              focusedResidue={focusedResidue}
+              taskType={taskType}
+              annotationGroups={activeGroups}
+              onResidueFocus={(chain, seqId, resName) => {
+                setFocusedResidue(prev =>
+                  prev?.chain === chain && prev?.seqId === seqId
+                    ? null
+                    : { chain, seqId, resType: resName }
+                )
+              }}
+              onResidueHover={(chain, seqId, resName) => {
+                setHoveredIxResidue(chain ? { chain, seqId, resType: resName } : null)
+              }}
+            />
 
             {/* Liability Scan */}
             {taskType === 'antibody' && liabilityHits.length > 0 && (
@@ -596,6 +622,16 @@ export default function ResultPage({ task, onBack }) {
           </div>
         </div>
       </div>
+
+      <ResidueInspector
+        residue={focusedResidue ?? hoveredIxResidue}
+        pinned={!!focusedResidue}
+        annotationGroups={activeGroups}
+        interactions={interactions}
+        liabilityHits={liabilityHits}
+        information={information}
+        onClose={() => setFocusedResidue(null)}
+      />
     </div>
   )
 }
@@ -750,8 +786,10 @@ function LiabilityScanCard({ hits, openGroups, onToggleGroup, focusedResidue, on
               {isOpen && (
                 <div className="rp-liability-items">
                   {items.map((h, i) => {
-                    const seqId = h.start + 1
-                    const isFocused = focusedResidue?.chain === h.chain && focusedResidue?.seqId === seqId
+                    const spanStart = h.start + 1
+                    const spanEnd = h.start + h.matchedSeq.length
+                    const isFocused = focusedResidue?.chain === h.chain
+                      && focusedResidue.seqId >= spanStart && focusedResidue.seqId <= spanEnd
                     return (
                       <div
                         key={i}
@@ -779,83 +817,480 @@ function LiabilityScanCard({ hits, openGroups, onToggleGroup, focusedResidue, on
   )
 }
 
-// ── Interactions card (enzyme) ───────────────────────────────────────
+// ── Residue Inspector floating panel ─────────────────────────────────
 
-function InteractionsCard({ interactions, loading, focusedResidue, onRowClick }) {
+const IX_LABELS = { hBonds: 'H-Bond', piPiStacks: 'π-π Stack', piCations: 'π-Cation', saltBridges: 'Salt Bridge', hydrophobics: 'Hydrophobic' }
+
+function ixOtherSide(type, row, chain, seqId) {
+  if (type === 'hBonds') {
+    const isD = row.donorChain === chain && row.donorPosition === seqId
+    return isD
+      ? { chain: row.acceptorChain, pos: row.acceptorPosition, res: row.acceptorResidue, dist: row.distance }
+      : { chain: row.donorChain, pos: row.donorPosition, res: row.donorResidue, dist: row.distance }
+  }
+  if (type === 'piCations') {
+    const isR = row.ringChain === chain && row.ringPosition === seqId
+    return isR
+      ? { chain: row.cationChain, pos: row.cationPosition, res: row.cationResidue, dist: row.distance }
+      : { chain: row.ringChain, pos: row.ringPosition, res: row.ringResidue, dist: row.distance }
+  }
+  const is1 = row.chain1 === chain && row.position1 === seqId
+  return is1
+    ? { chain: row.chain2, pos: row.position2, res: row.residue2, dist: row.distance }
+    : { chain: row.chain1, pos: row.position1, res: row.residue1, dist: row.distance }
+}
+
+function ResidueInspector({ residue, pinned, annotationGroups, interactions, liabilityHits, information, onClose }) {
+  if (!residue) return null
+
+  const chainEntity = information?.entities?.find(e => e.chain === residue.chain)
+  const chainLabel = chainEntity?.label
+
+  const matchedGroups = useMemo(() =>
+    (annotationGroups || []).filter(g =>
+      g.residues.some(r => r.chain === residue.chain && r.seqId === residue.seqId)
+    ), [annotationGroups, residue.chain, residue.seqId])
+
+  const matchIx = (c, p) => c === residue.chain && p === residue.seqId
+  const matchedIx = useMemo(() => {
+    if (!interactions) return null
+    const result = {}
+    let total = 0
+    for (const [key, label] of Object.entries(IX_LABELS)) {
+      const rows = (interactions[key] ?? []).filter(b => {
+        if (key === 'hBonds') return matchIx(b.donorChain, b.donorPosition) || matchIx(b.acceptorChain, b.acceptorPosition)
+        if (key === 'piCations') return matchIx(b.ringChain, b.ringPosition) || matchIx(b.cationChain, b.cationPosition)
+        return matchIx(b.chain1, b.position1) || matchIx(b.chain2, b.position2)
+      })
+      if (rows.length > 0) { result[key] = rows; total += rows.length }
+    }
+    return total > 0 ? { entries: result, total } : null
+  }, [interactions, residue.chain, residue.seqId])
+
+  const matchedLiability = useMemo(() =>
+    (liabilityHits || []).filter(h =>
+      h.chain === residue.chain && residue.seqId >= h.start + 1 && residue.seqId <= h.start + h.matchedSeq.length
+    ), [liabilityHits, residue.chain, residue.seqId])
+
+  const hasContent = matchedGroups.length > 0 || matchedIx || matchedLiability.length > 0
+
+  return (
+    <div className={`rp-inspector ${pinned ? 'pinned' : 'preview'}`}>
+      <div className="rp-inspector-header">
+        <span className="rp-inspector-id">
+          {residue.chain}{residue.seqId}
+          <span className="rp-inspector-res">{residue.resType}</span>
+        </span>
+        {chainLabel && <span className="rp-inspector-chain">{chainLabel}</span>}
+        {pinned && <button className="rp-inspector-close" onClick={onClose}>×</button>}
+      </div>
+
+      {!hasContent && (
+        <div className="rp-inspector-empty">No associated data</div>
+      )}
+
+      {matchedGroups.length > 0 && (
+        <div className="rp-inspector-section">
+          <div className="rp-inspector-section-title">Annotation</div>
+          {matchedGroups.map(g => (
+            <div key={g.id} className="rp-inspector-anno-item">
+              <span className="rp-inspector-dot" style={{ background: g.color }} />
+              {g.label}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {matchedIx && (
+        <div className="rp-inspector-section">
+          <div className="rp-inspector-section-title">Interactions ({matchedIx.total})</div>
+          {Object.entries(matchedIx.entries).map(([key, rows]) =>
+            rows.map((row, i) => {
+              const other = ixOtherSide(key, row, residue.chain, residue.seqId)
+              return (
+                <div key={`${key}-${i}`} className="rp-inspector-ix-item">
+                  <span className="rp-inspector-ix-type">{IX_LABELS[key]}</span>
+                  <span className="rp-inspector-ix-arrow">→</span>
+                  <span className="rp-inspector-ix-target">{other.chain}:{other.pos} {other.res}</span>
+                  <span className="rp-inspector-ix-dist">{other.dist.toFixed(1)}Å</span>
+                </div>
+              )
+            })
+          )}
+        </div>
+      )}
+
+      {matchedLiability.length > 0 && (
+        <div className="rp-inspector-section">
+          <div className="rp-inspector-section-title">Liability</div>
+          {matchedLiability.map((h, i) => (
+            <div key={i} className="rp-inspector-liability-item">
+              <span className="rp-inspector-liability-group">{h.group}</span>
+              <span className="rp-inspector-liability-motif">{h.matchedSeq}</span>
+              <span className="rp-inspector-liability-rsa">RSA {h.rsa}%</span>
+              <span className="rp-inspector-liability-risk" style={{ color: RISK_COLORS[h.risk] }}>{h.risk}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Interactions card ────────────────────────────────────────────────
+
+const CDR_ORDER = ['CDR-H1', 'CDR-H2', 'CDR-H3', 'CDR-L1', 'CDR-L2', 'CDR-L3', 'Framework']
+
+function buildCdrLookup(groups) {
+  const map = new Map()
+  if (!groups) return map
+  for (const g of groups) {
+    if (!g.id.startsWith('cdr_')) continue
+    const label = g.label
+    for (const r of g.residues) {
+      map.set(`${r.chain}:${r.seqId}`, label)
+    }
+  }
+  return map
+}
+
+function groupByEpitope(rows, antigenKey, antibodyKey, cdrMap) {
+  const grouped = new Map()
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i]
+    const ag = antigenKey(row)
+    const epLabel = `${ag.chain}${ag.seqId} ${ag.resName}`
+    if (!grouped.has(epLabel)) grouped.set(epLabel, [])
+    const ab = antibodyKey(row)
+    const cdr = cdrMap.get(`${ab.chain}:${ab.seqId}`) ?? 'Framework'
+    grouped.get(epLabel).push({ row, originalIndex: i, cdr })
+  }
+  for (const items of grouped.values()) {
+    items.sort((a, b) => CDR_ORDER.indexOf(a.cdr) - CDR_ORDER.indexOf(b.cdr))
+  }
+  return grouped
+}
+
+function InteractionsCard({ interactions, loading, focusedResidue, taskType, annotationGroups, onResidueFocus, onResidueHover }) {
   const [openSections, setOpenSections] = useState(new Set(['hBond']))
+  const [selectedRow, setSelectedRow] = useState(null)
+  const [selectedPair, setSelectedPair] = useState(null)
+  const [epitopeOnly, setEpitopeOnly] = useState(true)
   const toggleSection = (key) => setOpenSections(prev => {
     const next = new Set(prev)
     next.has(key) ? next.delete(key) : next.add(key)
     return next
   })
 
-  const hBonds = interactions?.hBonds ?? []
+  const isAntibody = taskType === 'antibody'
+  const cdrMap = useMemo(() => isAntibody ? buildCdrLookup(annotationGroups) : new Map(), [isAntibody, annotationGroups])
+
+  const filterByCdr = (rows, abChainKey, abSeqIdKey) => {
+    if (!isAntibody || !epitopeOnly || cdrMap.size === 0) return rows
+    return rows.filter(b => cdrMap.has(`${b[abChainKey]}:${b[abSeqIdKey]}`))
+  }
+
+  const hBonds = filterByCdr(interactions?.hBonds ?? [], 'donorChain', 'donorPosition')
+  const piPiStacks = filterByCdr(interactions?.piPiStacks ?? [], 'chain1', 'position1')
+  const piCations = filterByCdr(interactions?.piCations ?? [], 'ringChain', 'ringPosition')
+  const saltBridges = filterByCdr(interactions?.saltBridges ?? [], 'chain1', 'position1')
+  const hydrophobics = filterByCdr(interactions?.hydrophobics ?? [], 'chain1', 'position1')
+
+  const handleRowClick = (section, index, chain, seqId, resName, abChain, abSeqId) => {
+    const key = `${section}:${index}`
+    if (selectedRow === key) {
+      setSelectedRow(null)
+      setSelectedPair(null)
+      onResidueFocus(chain, seqId, resName)
+    } else {
+      setSelectedRow(key)
+      setSelectedPair(abChain != null ? { abChain, abSeqId, agChain: chain, agSeqId: seqId } : null)
+      onResidueFocus(chain, seqId, resName)
+    }
+  }
+
+  const isRowSelected = (section, index) => selectedRow === `${section}:${index}`
+
+  const isRowRelated = (section, index, abChain, abSeqId, agChain, agSeqId) => {
+    if (!selectedPair || selectedRow === `${section}:${index}`) return false
+    return selectedPair.abChain === abChain && selectedPair.abSeqId === abSeqId
+      && selectedPair.agChain === agChain && selectedPair.agSeqId === agSeqId
+  }
+
+  const isRowExternallyFocused = (side1Chain, side1Pos, side2Chain, side2Pos) => {
+    if (!focusedResidue) return false
+    const { chain: fc, seqId: fs } = focusedResidue
+    return (fc === side1Chain && fs === side1Pos) || (fc === side2Chain && fs === side2Pos)
+  }
 
   return (
     <div className="rp-anno-panel">
       <div className="rp-anno-header">
         <span className="rp-anno-title">Non-Covalent Bond</span>
+        {isAntibody && cdrMap.size > 0 && (
+          <div className="rp-ix-filter-toggle">
+            <button className={`rp-ix-filter-btn ${epitopeOnly ? 'active' : ''}`} onClick={() => setEpitopeOnly(true)}>CDR</button>
+            <button className={`rp-ix-filter-btn ${!epitopeOnly ? 'active' : ''}`} onClick={() => setEpitopeOnly(false)}>All</button>
+          </div>
+        )}
       </div>
       {loading && <div className="rp-anno-loading">Analyzing interactions...</div>}
       {!loading && interactions && (
         <div className="rp-interactions-body">
-          <div className="rp-ix-section">
-            <div className="rp-ix-section-header" onClick={() => toggleSection('hBond')}>
-              <span className="rp-ix-arrow">{openSections.has('hBond') ? '▾' : '▸'}</span>
-              <span className="rp-ix-section-title">H-Bond</span>
-              <span className="rp-ix-section-count">{hBonds.length}</span>
-            </div>
-            {openSections.has('hBond') && hBonds.length > 0 && (
-              <div className="rp-ix-table-wrap">
-                <table className="rp-ix-table">
-                  <thead>
-                    <tr>
-                      <th>Don-Chain</th>
-                      <th>Don-Pos</th>
-                      <th>Don-Res</th>
-                      <th>Don-Atom</th>
-                      <th>Acc-Chain</th>
-                      <th>Acc-Pos</th>
-                      <th>Acc-Res</th>
-                      <th>Acc-Atom</th>
-                      <th>Dist (Å)</th>
+
+          {/* H-Bond */}
+          <IxSection id="hBond" label="H-Bond" count={hBonds.length} cutoff="3.5" open={openSections} toggle={toggleSection}>
+            {isAntibody ? (
+              <GroupedDonorAcceptorTable
+                section="hBond" rows={hBonds} cdrMap={cdrMap}
+                antigenKey={b => ({ chain: b.acceptorChain, seqId: b.acceptorPosition, resName: b.acceptorResidue })}
+                antibodyKey={b => ({ chain: b.donorChain, seqId: b.donorPosition })}
+                focusKey={b => [b.acceptorChain, b.acceptorPosition, b.acceptorResidue]}
+                cols={['Don-Chain','Don-Pos','Don-Res','Don-Atom','Acc-Chain','Acc-Pos','Acc-Res','Acc-Atom','Dist (Å)']}
+                renderRow={b => (<>
+                  <td className="rp-ix-chain">{b.donorChain}</td><td>{b.donorPosition}</td>
+                  <td className="rp-ix-res">{b.donorResidue}</td><td className="rp-ix-atom">{b.donorAtom}</td>
+                  <td className="rp-ix-chain">{b.acceptorChain}</td><td>{b.acceptorPosition}</td>
+                  <td className="rp-ix-res">{b.acceptorResidue}</td><td className="rp-ix-atom">{b.acceptorAtom}</td>
+                  <td className="rp-ix-dist">{b.distance.toFixed(3)}</td>
+                </>)}
+                isRowSelected={isRowSelected} isRowRelated={isRowRelated} isRowExternallyFocused={isRowExternallyFocused} handleRowClick={handleRowClick} onResidueHover={onResidueHover}
+              />
+            ) : (
+              <table className="rp-ix-table">
+                <thead><tr>
+                  <th>Don-Chain</th><th>Don-Pos</th><th>Don-Res</th><th>Don-Atom</th>
+                  <th>Acc-Chain</th><th>Acc-Pos</th><th>Acc-Res</th><th>Acc-Atom</th>
+                  <th>Dist (Å)</th>
+                </tr></thead>
+                <tbody>
+                  {hBonds.map((b, i) => (
+                    <tr key={i} className={isRowSelected('hBond', i) ? 'focused' : isRowRelated('hBond', i, b.donorChain, b.donorPosition, b.acceptorChain, b.acceptorPosition) ? 'related' : isRowExternallyFocused(b.donorChain, b.donorPosition, b.acceptorChain, b.acceptorPosition) ? 'ext-focused' : ''}
+                      onClick={() => handleRowClick('hBond', i, b.acceptorChain, b.acceptorPosition, b.acceptorResidue, b.donorChain, b.donorPosition)}
+                      onMouseEnter={() => onResidueHover(b.acceptorChain, b.acceptorPosition, b.acceptorResidue)}
+                      onMouseLeave={() => onResidueHover(null)}>
+                      <td className="rp-ix-chain">{b.donorChain}</td><td>{b.donorPosition}</td>
+                      <td className="rp-ix-res">{b.donorResidue}</td><td className="rp-ix-atom">{b.donorAtom}</td>
+                      <td className="rp-ix-chain">{b.acceptorChain}</td><td>{b.acceptorPosition}</td>
+                      <td className="rp-ix-res">{b.acceptorResidue}</td><td className="rp-ix-atom">{b.acceptorAtom}</td>
+                      <td className="rp-ix-dist">{b.distance.toFixed(3)}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {hBonds.map((bond, i) => {
-                      const isFocused = focusedResidue?.chain === bond.acceptorChain
-                        && focusedResidue?.seqId === bond.acceptorPosition
-                      return (
-                        <tr
-                          key={i}
-                          className={isFocused ? 'focused' : ''}
-                          onClick={() => onRowClick(bond)}
-                        >
-                          <td className="rp-ix-chain">{bond.donorChain}</td>
-                          <td>{bond.donorPosition}</td>
-                          <td className="rp-ix-res">{bond.donorResidue}</td>
-                          <td className="rp-ix-atom">{bond.donorAtom}</td>
-                          <td className="rp-ix-chain">{bond.acceptorChain}</td>
-                          <td>{bond.acceptorPosition}</td>
-                          <td className="rp-ix-res">{bond.acceptorResidue}</td>
-                          <td className="rp-ix-atom">{bond.acceptorAtom}</td>
-                          <td className="rp-ix-dist">{bond.distance.toFixed(3)}</td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </table>
             )}
-            {openSections.has('hBond') && hBonds.length === 0 && (
-              <div className="rp-anno-loading">No H-bonds detected</div>
+          </IxSection>
+
+          {/* π-π Stack */}
+          <IxSection id="piPi" label="π-π Stack" count={piPiStacks.length} cutoff="6.5" open={openSections} toggle={toggleSection}>
+            {isAntibody ? (
+              <GroupedPairTable
+                section="piPi" rows={piPiStacks} cdrMap={cdrMap}
+                antigenKey={b => ({ chain: b.chain2, seqId: b.position2, resName: b.residue2 })}
+                antibodyKey={b => ({ chain: b.chain1, seqId: b.position1 })}
+                focusKey={b => [b.chain2, b.position2, b.residue2]}
+                cols={['Chain1','Pos1','Res1','Chain2','Pos2','Res2','Dist (Å)','Angle (°)']}
+                renderRow={b => (<>
+                  <td className="rp-ix-chain">{b.chain1}</td><td>{b.position1}</td><td className="rp-ix-res">{b.residue1}</td>
+                  <td className="rp-ix-chain">{b.chain2}</td><td>{b.position2}</td><td className="rp-ix-res">{b.residue2}</td>
+                  <td className="rp-ix-dist">{b.distance.toFixed(3)}</td><td className="rp-ix-angle">{b.angle.toFixed(1)}</td>
+                </>)}
+                isRowSelected={isRowSelected} isRowRelated={isRowRelated} isRowExternallyFocused={isRowExternallyFocused} handleRowClick={handleRowClick} onResidueHover={onResidueHover}
+              />
+            ) : (
+              <table className="rp-ix-table">
+                <thead><tr><th>Chain1</th><th>Pos1</th><th>Res1</th><th>Chain2</th><th>Pos2</th><th>Res2</th><th>Dist (Å)</th><th>Angle (°)</th></tr></thead>
+                <tbody>
+                  {piPiStacks.map((b, i) => (
+                    <tr key={i} className={isRowSelected('piPi', i) ? 'focused' : isRowRelated('piPi', i, b.chain1, b.position1, b.chain2, b.position2) ? 'related' : isRowExternallyFocused(b.chain1, b.position1, b.chain2, b.position2) ? 'ext-focused' : ''}
+                      onClick={() => handleRowClick('piPi', i, b.chain2, b.position2, b.residue2, b.chain1, b.position1)}
+                      onMouseEnter={() => onResidueHover(b.chain2, b.position2, b.residue2)}
+                      onMouseLeave={() => onResidueHover(null)}>
+                      <td className="rp-ix-chain">{b.chain1}</td><td>{b.position1}</td><td className="rp-ix-res">{b.residue1}</td>
+                      <td className="rp-ix-chain">{b.chain2}</td><td>{b.position2}</td><td className="rp-ix-res">{b.residue2}</td>
+                      <td className="rp-ix-dist">{b.distance.toFixed(3)}</td><td className="rp-ix-angle">{b.angle.toFixed(1)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
-          </div>
+          </IxSection>
+
+          {/* π-Cation */}
+          <IxSection id="piCation" label="π-Cation" count={piCations.length} cutoff="6.0" open={openSections} toggle={toggleSection}>
+            {isAntibody ? (
+              <GroupedPairTable
+                section="piCation" rows={piCations} cdrMap={cdrMap}
+                antigenKey={b => ({ chain: b.cationChain, seqId: b.cationPosition, resName: b.cationResidue })}
+                antibodyKey={b => ({ chain: b.ringChain, seqId: b.ringPosition })}
+                focusKey={b => [b.cationChain, b.cationPosition, b.cationResidue]}
+                cols={['Ring-Chain','Ring-Pos','Ring-Res','Cat-Chain','Cat-Pos','Cat-Res','Cat-Atom','Dist (Å)']}
+                renderRow={b => (<>
+                  <td className="rp-ix-chain">{b.ringChain}</td><td>{b.ringPosition}</td><td className="rp-ix-res">{b.ringResidue}</td>
+                  <td className="rp-ix-chain">{b.cationChain}</td><td>{b.cationPosition}</td><td className="rp-ix-res">{b.cationResidue}</td>
+                  <td className="rp-ix-atom">{b.cationAtom}</td><td className="rp-ix-dist">{b.distance.toFixed(3)}</td>
+                </>)}
+                isRowSelected={isRowSelected} isRowRelated={isRowRelated} isRowExternallyFocused={isRowExternallyFocused} handleRowClick={handleRowClick} onResidueHover={onResidueHover}
+              />
+            ) : (
+              <table className="rp-ix-table">
+                <thead><tr><th>Ring-Chain</th><th>Ring-Pos</th><th>Ring-Res</th><th>Cat-Chain</th><th>Cat-Pos</th><th>Cat-Res</th><th>Cat-Atom</th><th>Dist (Å)</th></tr></thead>
+                <tbody>
+                  {piCations.map((b, i) => (
+                    <tr key={i} className={isRowSelected('piCation', i) ? 'focused' : isRowRelated('piCation', i, b.ringChain, b.ringPosition, b.cationChain, b.cationPosition) ? 'related' : isRowExternallyFocused(b.ringChain, b.ringPosition, b.cationChain, b.cationPosition) ? 'ext-focused' : ''}
+                      onClick={() => handleRowClick('piCation', i, b.cationChain, b.cationPosition, b.cationResidue, b.ringChain, b.ringPosition)}
+                      onMouseEnter={() => onResidueHover(b.cationChain, b.cationPosition, b.cationResidue)}
+                      onMouseLeave={() => onResidueHover(null)}>
+                      <td className="rp-ix-chain">{b.ringChain}</td><td>{b.ringPosition}</td><td className="rp-ix-res">{b.ringResidue}</td>
+                      <td className="rp-ix-chain">{b.cationChain}</td><td>{b.cationPosition}</td><td className="rp-ix-res">{b.cationResidue}</td>
+                      <td className="rp-ix-atom">{b.cationAtom}</td><td className="rp-ix-dist">{b.distance.toFixed(3)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </IxSection>
+
+          {/* Salt Bridge */}
+          <IxSection id="saltBridge" label="Salt Bridge" count={saltBridges.length} cutoff="4.0" open={openSections} toggle={toggleSection}>
+            {isAntibody ? (
+              <GroupedPairTable
+                section="saltBridge" rows={saltBridges} cdrMap={cdrMap}
+                antigenKey={b => ({ chain: b.chain2, seqId: b.position2, resName: b.residue2 })}
+                antibodyKey={b => ({ chain: b.chain1, seqId: b.position1 })}
+                focusKey={b => [b.chain2, b.position2, b.residue2]}
+                cols={['Chain1','Pos1','Res1','Atom1','Chain2','Pos2','Res2','Atom2','Dist (Å)']}
+                renderRow={b => (<>
+                  <td className="rp-ix-chain">{b.chain1}</td><td>{b.position1}</td><td className="rp-ix-res">{b.residue1}</td><td className="rp-ix-atom">{b.atom1}</td>
+                  <td className="rp-ix-chain">{b.chain2}</td><td>{b.position2}</td><td className="rp-ix-res">{b.residue2}</td><td className="rp-ix-atom">{b.atom2}</td>
+                  <td className="rp-ix-dist">{b.distance.toFixed(3)}</td>
+                </>)}
+                isRowSelected={isRowSelected} isRowRelated={isRowRelated} isRowExternallyFocused={isRowExternallyFocused} handleRowClick={handleRowClick} onResidueHover={onResidueHover}
+              />
+            ) : (
+              <table className="rp-ix-table">
+                <thead><tr><th>Chain1</th><th>Pos1</th><th>Res1</th><th>Atom1</th><th>Chain2</th><th>Pos2</th><th>Res2</th><th>Atom2</th><th>Dist (Å)</th></tr></thead>
+                <tbody>
+                  {saltBridges.map((b, i) => (
+                    <tr key={i} className={isRowSelected('saltBridge', i) ? 'focused' : isRowRelated('saltBridge', i, b.chain1, b.position1, b.chain2, b.position2) ? 'related' : isRowExternallyFocused(b.chain1, b.position1, b.chain2, b.position2) ? 'ext-focused' : ''}
+                      onClick={() => handleRowClick('saltBridge', i, b.chain2, b.position2, b.residue2, b.chain1, b.position1)}
+                      onMouseEnter={() => onResidueHover(b.chain2, b.position2, b.residue2)}
+                      onMouseLeave={() => onResidueHover(null)}>
+                      <td className="rp-ix-chain">{b.chain1}</td><td>{b.position1}</td><td className="rp-ix-res">{b.residue1}</td><td className="rp-ix-atom">{b.atom1}</td>
+                      <td className="rp-ix-chain">{b.chain2}</td><td>{b.position2}</td><td className="rp-ix-res">{b.residue2}</td><td className="rp-ix-atom">{b.atom2}</td>
+                      <td className="rp-ix-dist">{b.distance.toFixed(3)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </IxSection>
+
+          {/* Hydrophobic */}
+          <IxSection id="hydrophobic" label="Hydrophobic" count={hydrophobics.length} cutoff="4.5" open={openSections} toggle={toggleSection}>
+            {isAntibody ? (
+              <GroupedPairTable
+                section="hydrophobic" rows={hydrophobics} cdrMap={cdrMap}
+                antigenKey={b => ({ chain: b.chain2, seqId: b.position2, resName: b.residue2 })}
+                antibodyKey={b => ({ chain: b.chain1, seqId: b.position1 })}
+                focusKey={b => [b.chain2, b.position2, b.residue2]}
+                cols={['Chain1','Pos1','Res1','Atom1','Chain2','Pos2','Res2','Atom2','Dist (Å)']}
+                renderRow={b => (<>
+                  <td className="rp-ix-chain">{b.chain1}</td><td>{b.position1}</td><td className="rp-ix-res">{b.residue1}</td><td className="rp-ix-atom">{b.atom1}</td>
+                  <td className="rp-ix-chain">{b.chain2}</td><td>{b.position2}</td><td className="rp-ix-res">{b.residue2}</td><td className="rp-ix-atom">{b.atom2}</td>
+                  <td className="rp-ix-dist">{b.distance.toFixed(3)}</td>
+                </>)}
+                isRowSelected={isRowSelected} isRowRelated={isRowRelated} isRowExternallyFocused={isRowExternallyFocused} handleRowClick={handleRowClick} onResidueHover={onResidueHover}
+              />
+            ) : (
+              <table className="rp-ix-table">
+                <thead><tr><th>Chain1</th><th>Pos1</th><th>Res1</th><th>Atom1</th><th>Chain2</th><th>Pos2</th><th>Res2</th><th>Atom2</th><th>Dist (Å)</th></tr></thead>
+                <tbody>
+                  {hydrophobics.map((b, i) => (
+                    <tr key={i} className={isRowSelected('hydrophobic', i) ? 'focused' : isRowRelated('hydrophobic', i, b.chain1, b.position1, b.chain2, b.position2) ? 'related' : isRowExternallyFocused(b.chain1, b.position1, b.chain2, b.position2) ? 'ext-focused' : ''}
+                      onClick={() => handleRowClick('hydrophobic', i, b.chain2, b.position2, b.residue2, b.chain1, b.position1)}
+                      onMouseEnter={() => onResidueHover(b.chain2, b.position2, b.residue2)}
+                      onMouseLeave={() => onResidueHover(null)}>
+                      <td className="rp-ix-chain">{b.chain1}</td><td>{b.position1}</td><td className="rp-ix-res">{b.residue1}</td><td className="rp-ix-atom">{b.atom1}</td>
+                      <td className="rp-ix-chain">{b.chain2}</td><td>{b.position2}</td><td className="rp-ix-res">{b.residue2}</td><td className="rp-ix-atom">{b.atom2}</td>
+                      <td className="rp-ix-dist">{b.distance.toFixed(3)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </IxSection>
+
         </div>
       )}
     </div>
   )
 }
+
+function IxSection({ id, label, count, cutoff, open, toggle, children }) {
+  const isOpen = open.has(id)
+  return (
+    <div className="rp-ix-section">
+      <div className="rp-ix-section-header" onClick={() => toggle(id)}>
+        <span className="rp-ix-arrow">{isOpen ? '▾' : '▸'}</span>
+        <span className="rp-ix-section-title">{label}</span>
+        {cutoff && <span className="rp-ix-cutoff">≤ {cutoff} Å</span>}
+        <span className="rp-ix-section-count">{count}</span>
+      </div>
+      {isOpen && count > 0 && <div className="rp-ix-table-wrap">{children}</div>}
+      {isOpen && count === 0 && <div className="rp-anno-loading">No {label} detected</div>}
+    </div>
+  )
+}
+
+// ── Grouped interaction table (antibody mode) ──────────────────────
+
+function GroupedIxTable({ section, rows, cdrMap, antigenKey, antibodyKey, focusKey, cols, renderRow, isRowSelected, isRowRelated, isRowExternallyFocused, handleRowClick, onResidueHover }) {
+  const grouped = useMemo(() => groupByEpitope(rows, antigenKey, antibodyKey, cdrMap), [rows, antigenKey, antibodyKey, cdrMap])
+  const colCount = cols.length + 1
+
+  return (
+    <table className="rp-ix-table">
+      <thead><tr>
+        <th>CDR</th>
+        {cols.map(c => <th key={c}>{c}</th>)}
+      </tr></thead>
+      <tbody>
+        {[...grouped.entries()].map(([epLabel, items]) => (
+          <Fragment key={epLabel}>
+            <tr className="rp-ix-epitope-row">
+              <td colSpan={colCount}>
+                <span className="rp-ix-epitope-label">{epLabel}</span>
+                <span className="rp-ix-epitope-count">{items.length}</span>
+              </td>
+            </tr>
+            {items.map(({ row, originalIndex, cdr }) => {
+              const [agChain, agSeqId, agRes] = focusKey(row)
+              const ab = antibodyKey(row)
+              const cls = isRowSelected(section, originalIndex) ? 'focused'
+                : isRowRelated(section, originalIndex, ab.chain, ab.seqId, agChain, agSeqId) ? 'related'
+                : isRowExternallyFocused(ab.chain, ab.seqId, agChain, agSeqId) ? 'ext-focused' : ''
+              return (
+                <tr key={originalIndex}
+                  className={cls}
+                  onClick={() => handleRowClick(section, originalIndex, agChain, agSeqId, agRes, ab.chain, ab.seqId)}
+                  onMouseEnter={() => onResidueHover(agChain, agSeqId, agRes)}
+                  onMouseLeave={() => onResidueHover(null)}
+                >
+                  <td><span className="rp-ix-cdr-tag">{cdr}</span></td>
+                  {renderRow(row)}
+                </tr>
+              )
+            })}
+          </Fragment>
+        ))}
+      </tbody>
+    </table>
+  )
+}
+
+const GroupedDonorAcceptorTable = GroupedIxTable
+const GroupedPairTable = GroupedIxTable
 
 // ── Homolog row ──────────────────────────────────────────────────────
 
@@ -910,8 +1345,24 @@ function SequenceBar({ entities, groups, focusedResidue, onResidueClick }) {
     }
   }, [focusedResidue])
 
+  const uniqueGroups = useMemo(() => {
+    if (!groups?.length) return []
+    const seen = new Set()
+    return groups.filter(g => { if (seen.has(g.label)) return false; seen.add(g.label); return true })
+  }, [groups])
+
   return (
     <div className="rp-seqbar">
+      {uniqueGroups.length > 0 && (
+        <div className="rp-seqbar-legend">
+          {uniqueGroups.map(g => (
+            <span key={g.id} className="rp-seqbar-legend-item">
+              <span className="rp-seqbar-legend-dot" style={{ background: g.color }} />
+              {g.label}
+            </span>
+          ))}
+        </div>
+      )}
       {chains.map(entity => {
         const seq = entity.sequence
         const blocks = []

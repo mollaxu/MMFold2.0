@@ -231,12 +231,41 @@
   max-height: 220px;
   overflow-y: auto;
 }
+.rp-seqbar-legend {
+  position: sticky;
+  top: -10px;
+  z-index: 2;
+  background: #161616;
+  padding: 10px 0 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  justify-content: flex-end;
+}
+.rp-seqbar-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: #999;
+}
+.rp-seqbar-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
 .rp-seqbar-chain {
   display: flex;
   flex-direction: column;
   gap: 3px;
 }
 .rp-seqbar-chain-label {
+  position: sticky;
+  top: 20px;
+  z-index: 1;
+  background: #161616;
+  padding: 2px 0;
   font-size: 11px;
   color: #888;
   font-weight: 500;
@@ -262,6 +291,7 @@
 }
 .rp-seqbar-ticks {
   display: flex;
+  min-height: 14px;
 }
 .rp-seqbar-tick {
   font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
@@ -416,6 +446,13 @@
   padding: 12px 16px;
   border-bottom: 1px solid #222;
   flex-shrink: 0;
+}
+
+.rp-homolog-source-hint {
+  padding: 6px 16px;
+  font-size: 12px;
+  color: #777;
+  border-bottom: 1px solid #222;
 }
 
 .rp-anno-title {
@@ -1283,64 +1320,304 @@
 }
 
 /* ── Interactions (Non-Covalent Bond) ── */
-.rp-interactions-body { padding: 0; }
+.rp-interactions-body {
+  padding: 4px 8px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
 
 .rp-ix-section-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
+  padding: 8px 8px;
+  border-radius: 6px;
   cursor: pointer;
+  transition: background 0.1s;
   user-select: none;
-  border-bottom: 1px solid #222;
 }
-.rp-ix-section-header:hover { background: rgba(255, 255, 255, 0.03); }
-.rp-ix-arrow { font-size: 11px; color: #888; width: 12px; }
-.rp-ix-section-title { font-size: 13px; font-weight: 600; color: #e0e0e0; }
-.rp-ix-section-count {
+.rp-ix-section-header:hover { background: #1a1a1a; }
+.rp-ix-arrow {
+  font-size: 20px;
+  color: #555;
+  width: 22px;
+  flex-shrink: 0;
+}
+.rp-ix-section-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #ccc;
+}
+.rp-ix-cutoff {
   font-size: 11px;
-  color: #888;
-  background: #222;
-  padding: 1px 7px;
-  border-radius: 8px;
+  color: #555;
+  font-family: 'SF Mono', 'Menlo', monospace;
   margin-left: 4px;
+}
+.rp-ix-section-count {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  background: #333;
+  padding: 1px 7px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
 }
 
 .rp-ix-table-wrap {
   overflow-x: auto;
-  padding: 0;
+  padding: 0 0 4px 20px;
 }
 .rp-ix-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 12px;
-  min-width: 520px;
+  font-family: 'SF Mono', 'Menlo', monospace;
+  min-width: 480px;
 }
 .rp-ix-table thead th {
   position: sticky;
   top: 0;
-  background: #1a1a1a;
-  color: #c0a0ff;
-  font-weight: 600;
+  background: #161616;
+  color: #666;
+  font-weight: 500;
   font-size: 11px;
   text-align: left;
-  padding: 8px 8px;
-  border-bottom: 1px solid #333;
+  padding: 6px 6px;
+  border-bottom: 1px solid #252525;
   white-space: nowrap;
 }
 .rp-ix-table tbody tr {
   cursor: pointer;
-  transition: background 0.15s;
+  border-radius: 5px;
+  transition: background 0.1s;
 }
-.rp-ix-table tbody tr:hover { background: rgba(255, 255, 255, 0.04); }
-.rp-ix-table tbody tr.focused { background: rgba(100, 160, 255, 0.12); }
+.rp-ix-table tbody tr:hover {
+  background: #1a1a1a;
+  border-left: 2px solid #4dd8e8;
+}
+.rp-ix-table tbody tr:hover .rp-ix-atom {
+  color: #4dd8e8;
+  font-weight: 600;
+}
+.rp-ix-table tbody tr.focused { background: rgba(255, 255, 255, 0.08); }
+.rp-ix-table tbody tr.related { background: rgba(77, 216, 232, 0.06); border-left: 2px solid rgba(77, 216, 232, 0.3); }
+.rp-ix-table tbody tr.ext-focused { background: rgba(255, 255, 255, 0.06); border-left: 2px solid rgba(255, 255, 255, 0.25); }
 .rp-ix-table tbody td {
-  padding: 6px 8px;
-  border-bottom: 1px solid #1a1a1a;
-  color: #ccc;
+  padding: 5px 6px;
+  color: #999;
   white-space: nowrap;
+  font-size: 12px;
 }
-.rp-ix-chain { color: #9f7aea; }
-.rp-ix-res { color: #48bb78; }
-.rp-ix-atom { color: #63b3ed; }
-.rp-ix-dist { color: #ecc94b; font-variant-numeric: tabular-nums; }
+/* Epitope / All filter toggle */
+.rp-ix-filter-toggle {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+  background: #1e1e1e;
+  border-radius: 6px;
+  padding: 2px;
+}
+.rp-ix-filter-btn {
+  padding: 3px 10px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #666;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.rp-ix-filter-btn:hover { color: #aaa; }
+.rp-ix-filter-btn.active {
+  background: #333;
+  color: #fff;
+}
+
+/* Epitope group sub-header */
+.rp-ix-epitope-row td {
+  padding: 8px 6px 4px;
+  border-bottom: 1px solid #252525;
+}
+.rp-ix-epitope-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ddd;
+  letter-spacing: 0.02em;
+}
+.rp-ix-epitope-count {
+  font-size: 10px;
+  font-weight: 600;
+  color: #888;
+  background: #252525;
+  padding: 1px 6px;
+  border-radius: 8px;
+  margin-left: 8px;
+}
+
+/* CDR tag */
+.rp-ix-cdr-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 500;
+  color: #b0b3e8;
+  background: rgba(91, 95, 199, 0.12);
+  border: 1px solid rgba(91, 95, 199, 0.25);
+  border-radius: 4px;
+  padding: 1px 5px;
+  white-space: nowrap;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.rp-ix-chain { color: #888; }
+.rp-ix-res { color: #ccc; font-weight: 600; }
+.rp-ix-atom { color: #888; }
+.rp-ix-dist { color: #ddd; font-variant-numeric: tabular-nums; }
+.rp-ix-angle { color: #ddd; font-variant-numeric: tabular-nums; }
+
+/* ── Residue Inspector ── */
+.rp-inspector {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 300px;
+  max-height: 420px;
+  overflow-y: auto;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  z-index: 1000;
+  font-size: 12px;
+  transition: opacity 0.15s, transform 0.15s;
+}
+.rp-inspector.preview { opacity: 0.88; transform: translateY(0); }
+.rp-inspector.pinned { opacity: 1; border-color: #444; }
+
+.rp-inspector-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #2a2a2a;
+}
+.rp-inspector-id {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+.rp-inspector-res {
+  margin-left: 4px;
+  font-weight: 400;
+  color: #999;
+}
+.rp-inspector-chain {
+  font-size: 11px;
+  color: #666;
+  margin-left: auto;
+}
+.rp-inspector-close {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+}
+.rp-inspector-close:hover { color: #ccc; }
+
+.rp-inspector-empty {
+  padding: 16px 12px;
+  color: #555;
+  text-align: center;
+  font-size: 11px;
+}
+
+.rp-inspector-section {
+  padding: 8px 12px;
+  border-bottom: 1px solid #2a2a2a;
+}
+.rp-inspector-section:last-child { border-bottom: none; }
+
+.rp-inspector-section-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.rp-inspector-anno-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+  color: #bbb;
+  font-size: 12px;
+}
+.rp-inspector-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.rp-inspector-ix-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+  color: #999;
+  font-size: 11px;
+}
+.rp-inspector-ix-type {
+  color: #888;
+  min-width: 72px;
+  flex-shrink: 0;
+}
+.rp-inspector-ix-arrow { color: #555; }
+.rp-inspector-ix-target {
+  color: #ccc;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.rp-inspector-ix-dist {
+  margin-left: auto;
+  color: #777;
+  font-variant-numeric: tabular-nums;
+}
+
+.rp-inspector-liability-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+  font-size: 11px;
+}
+.rp-inspector-liability-group {
+  color: #bbb;
+  min-width: 80px;
+}
+.rp-inspector-liability-motif {
+  color: #999;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 10px;
+}
+.rp-inspector-liability-rsa {
+  color: #666;
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
+}
+.rp-inspector-liability-risk {
+  font-weight: 600;
+  font-size: 10px;
+  min-width: 48px;
+  text-align: right;
+}

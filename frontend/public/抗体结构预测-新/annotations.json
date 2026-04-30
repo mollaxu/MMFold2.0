@@ -1,0 +1,2469 @@
+{
+  "schemes": {
+    "IMGT": {
+      "groups": [
+        {
+          "id": "epitope",
+          "label": "Epitope",
+          "color": "#CC44FF",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "A",
+              "seqId": 94,
+              "resType": "H"
+            },
+            {
+              "chain": "A",
+              "seqId": 95,
+              "resType": "S"
+            },
+            {
+              "chain": "A",
+              "seqId": 96,
+              "resType": "F"
+            },
+            {
+              "chain": "A",
+              "seqId": 97,
+              "resType": "P"
+            },
+            {
+              "chain": "A",
+              "seqId": 98,
+              "resType": "H"
+            },
+            {
+              "chain": "A",
+              "seqId": 99,
+              "resType": "P"
+            },
+            {
+              "chain": "A",
+              "seqId": 100,
+              "resType": "L"
+            },
+            {
+              "chain": "A",
+              "seqId": 194,
+              "resType": "E"
+            },
+            {
+              "chain": "A",
+              "seqId": 195,
+              "resType": "F"
+            },
+            {
+              "chain": "A",
+              "seqId": 248,
+              "resType": "H"
+            },
+            {
+              "chain": "A",
+              "seqId": 249,
+              "resType": "Y"
+            },
+            {
+              "chain": "A",
+              "seqId": 251,
+              "resType": "K"
+            },
+            {
+              "chain": "A",
+              "seqId": 252,
+              "resType": "W"
+            },
+            {
+              "chain": "A",
+              "seqId": 255,
+              "resType": "D"
+            },
+            {
+              "chain": "A",
+              "seqId": 256,
+              "resType": "T"
+            },
+            {
+              "chain": "A",
+              "seqId": 258,
+              "resType": "A"
+            },
+            {
+              "chain": "A",
+              "seqId": 259,
+              "resType": "A"
+            },
+            {
+              "chain": "A",
+              "seqId": 260,
+              "resType": "N"
+            }
+          ]
+        },
+        {
+          "id": "cdr_h1",
+          "label": "CDR-H1",
+          "color": "#1E90FF",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "B",
+              "seqId": 27,
+              "resType": "G"
+            },
+            {
+              "chain": "B",
+              "seqId": 28,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 29,
+              "resType": "I"
+            },
+            {
+              "chain": "B",
+              "seqId": 30,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 31,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 32,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 33,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 34,
+              "resType": "W"
+            },
+            {
+              "chain": "B",
+              "seqId": 35,
+              "resType": "S"
+            }
+          ]
+        },
+        {
+          "id": "cdr_h2",
+          "label": "CDR-H2",
+          "color": "#4169E1",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "B",
+              "seqId": 50,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 51,
+              "resType": "I"
+            },
+            {
+              "chain": "B",
+              "seqId": 52,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 53,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 54,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 55,
+              "resType": "G"
+            },
+            {
+              "chain": "B",
+              "seqId": 56,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 57,
+              "resType": "T"
+            },
+            {
+              "chain": "B",
+              "seqId": 58,
+              "resType": "N"
+            }
+          ]
+        },
+        {
+          "id": "cdr_h3",
+          "label": "CDR-H3",
+          "color": "#0000CD",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "B",
+              "seqId": 97,
+              "resType": "G"
+            },
+            {
+              "chain": "B",
+              "seqId": 98,
+              "resType": "T"
+            },
+            {
+              "chain": "B",
+              "seqId": 99,
+              "resType": "T"
+            },
+            {
+              "chain": "B",
+              "seqId": 100,
+              "resType": "I"
+            },
+            {
+              "chain": "B",
+              "seqId": 101,
+              "resType": "F"
+            },
+            {
+              "chain": "B",
+              "seqId": 102,
+              "resType": "G"
+            },
+            {
+              "chain": "B",
+              "seqId": 103,
+              "resType": "V"
+            },
+            {
+              "chain": "B",
+              "seqId": 104,
+              "resType": "V"
+            },
+            {
+              "chain": "B",
+              "seqId": 105,
+              "resType": "T"
+            },
+            {
+              "chain": "B",
+              "seqId": 106,
+              "resType": "P"
+            },
+            {
+              "chain": "B",
+              "seqId": 107,
+              "resType": "N"
+            },
+            {
+              "chain": "B",
+              "seqId": 108,
+              "resType": "F"
+            },
+            {
+              "chain": "B",
+              "seqId": 109,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 110,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 111,
+              "resType": "G"
+            },
+            {
+              "chain": "B",
+              "seqId": 112,
+              "resType": "M"
+            },
+            {
+              "chain": "B",
+              "seqId": 113,
+              "resType": "D"
+            }
+          ]
+        },
+        {
+          "id": "cdr_l1",
+          "label": "CDR-L1",
+          "color": "#FF6347",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "C",
+              "seqId": 24,
+              "resType": "R"
+            },
+            {
+              "chain": "C",
+              "seqId": 25,
+              "resType": "A"
+            },
+            {
+              "chain": "C",
+              "seqId": 26,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 27,
+              "resType": "Q"
+            },
+            {
+              "chain": "C",
+              "seqId": 28,
+              "resType": "G"
+            },
+            {
+              "chain": "C",
+              "seqId": 29,
+              "resType": "I"
+            },
+            {
+              "chain": "C",
+              "seqId": 30,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 31,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 32,
+              "resType": "Y"
+            },
+            {
+              "chain": "C",
+              "seqId": 33,
+              "resType": "L"
+            },
+            {
+              "chain": "C",
+              "seqId": 34,
+              "resType": "A"
+            }
+          ]
+        },
+        {
+          "id": "cdr_l2",
+          "label": "CDR-L2",
+          "color": "#FF4500",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "C",
+              "seqId": 50,
+              "resType": "A"
+            },
+            {
+              "chain": "C",
+              "seqId": 51,
+              "resType": "A"
+            },
+            {
+              "chain": "C",
+              "seqId": 52,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 53,
+              "resType": "T"
+            },
+            {
+              "chain": "C",
+              "seqId": 54,
+              "resType": "L"
+            },
+            {
+              "chain": "C",
+              "seqId": 55,
+              "resType": "Q"
+            },
+            {
+              "chain": "C",
+              "seqId": 56,
+              "resType": "S"
+            }
+          ]
+        },
+        {
+          "id": "cdr_l3",
+          "label": "CDR-L3",
+          "color": "#DC143C",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "C",
+              "seqId": 89,
+              "resType": "Q"
+            },
+            {
+              "chain": "C",
+              "seqId": 90,
+              "resType": "Q"
+            },
+            {
+              "chain": "C",
+              "seqId": 91,
+              "resType": "L"
+            },
+            {
+              "chain": "C",
+              "seqId": 92,
+              "resType": "N"
+            },
+            {
+              "chain": "C",
+              "seqId": 93,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 94,
+              "resType": "Y"
+            },
+            {
+              "chain": "C",
+              "seqId": 95,
+              "resType": "P"
+            },
+            {
+              "chain": "C",
+              "seqId": 96,
+              "resType": "L"
+            },
+            {
+              "chain": "C",
+              "seqId": 97,
+              "resType": "T"
+            }
+          ]
+        }
+      ]
+    },
+    "Kabat": {
+      "groups": [
+        {
+          "id": "epitope",
+          "label": "Epitope",
+          "color": "#CC44FF",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "A",
+              "seqId": 94,
+              "resType": "H"
+            },
+            {
+              "chain": "A",
+              "seqId": 95,
+              "resType": "S"
+            },
+            {
+              "chain": "A",
+              "seqId": 96,
+              "resType": "F"
+            },
+            {
+              "chain": "A",
+              "seqId": 97,
+              "resType": "P"
+            },
+            {
+              "chain": "A",
+              "seqId": 98,
+              "resType": "H"
+            },
+            {
+              "chain": "A",
+              "seqId": 99,
+              "resType": "P"
+            },
+            {
+              "chain": "A",
+              "seqId": 100,
+              "resType": "L"
+            },
+            {
+              "chain": "A",
+              "seqId": 194,
+              "resType": "E"
+            },
+            {
+              "chain": "A",
+              "seqId": 195,
+              "resType": "F"
+            },
+            {
+              "chain": "A",
+              "seqId": 248,
+              "resType": "H"
+            },
+            {
+              "chain": "A",
+              "seqId": 249,
+              "resType": "Y"
+            },
+            {
+              "chain": "A",
+              "seqId": 251,
+              "resType": "K"
+            },
+            {
+              "chain": "A",
+              "seqId": 252,
+              "resType": "W"
+            },
+            {
+              "chain": "A",
+              "seqId": 255,
+              "resType": "D"
+            },
+            {
+              "chain": "A",
+              "seqId": 256,
+              "resType": "T"
+            },
+            {
+              "chain": "A",
+              "seqId": 258,
+              "resType": "A"
+            },
+            {
+              "chain": "A",
+              "seqId": 259,
+              "resType": "A"
+            },
+            {
+              "chain": "A",
+              "seqId": 260,
+              "resType": "N"
+            }
+          ]
+        },
+        {
+          "id": "cdr_h1",
+          "label": "CDR-H1",
+          "color": "#1E90FF",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "B",
+              "seqId": 31,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 32,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 33,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 34,
+              "resType": "W"
+            },
+            {
+              "chain": "B",
+              "seqId": 35,
+              "resType": "S"
+            }
+          ]
+        },
+        {
+          "id": "cdr_h2",
+          "label": "CDR-H2",
+          "color": "#4169E1",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "B",
+              "seqId": 50,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 51,
+              "resType": "I"
+            },
+            {
+              "chain": "B",
+              "seqId": 52,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 53,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 54,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 55,
+              "resType": "G"
+            },
+            {
+              "chain": "B",
+              "seqId": 56,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 57,
+              "resType": "T"
+            },
+            {
+              "chain": "B",
+              "seqId": 58,
+              "resType": "N"
+            },
+            {
+              "chain": "B",
+              "seqId": 59,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 60,
+              "resType": "N"
+            },
+            {
+              "chain": "B",
+              "seqId": 61,
+              "resType": "P"
+            },
+            {
+              "chain": "B",
+              "seqId": 62,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 63,
+              "resType": "L"
+            },
+            {
+              "chain": "B",
+              "seqId": 64,
+              "resType": "K"
+            },
+            {
+              "chain": "B",
+              "seqId": 65,
+              "resType": "S"
+            }
+          ]
+        },
+        {
+          "id": "cdr_h3",
+          "label": "CDR-H3",
+          "color": "#0000CD",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "B",
+              "seqId": 95,
+              "resType": "C"
+            },
+            {
+              "chain": "B",
+              "seqId": 96,
+              "resType": "A"
+            },
+            {
+              "chain": "B",
+              "seqId": 97,
+              "resType": "G"
+            },
+            {
+              "chain": "B",
+              "seqId": 98,
+              "resType": "T"
+            },
+            {
+              "chain": "B",
+              "seqId": 99,
+              "resType": "T"
+            },
+            {
+              "chain": "B",
+              "seqId": 100,
+              "resType": "I"
+            },
+            {
+              "chain": "B",
+              "seqId": 101,
+              "resType": "F"
+            },
+            {
+              "chain": "B",
+              "seqId": 102,
+              "resType": "G"
+            },
+            {
+              "chain": "B",
+              "seqId": 103,
+              "resType": "V"
+            },
+            {
+              "chain": "B",
+              "seqId": 104,
+              "resType": "V"
+            },
+            {
+              "chain": "B",
+              "seqId": 105,
+              "resType": "T"
+            },
+            {
+              "chain": "B",
+              "seqId": 106,
+              "resType": "P"
+            },
+            {
+              "chain": "B",
+              "seqId": 107,
+              "resType": "N"
+            },
+            {
+              "chain": "B",
+              "seqId": 108,
+              "resType": "F"
+            },
+            {
+              "chain": "B",
+              "seqId": 109,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 110,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 111,
+              "resType": "G"
+            },
+            {
+              "chain": "B",
+              "seqId": 112,
+              "resType": "M"
+            },
+            {
+              "chain": "B",
+              "seqId": 113,
+              "resType": "D"
+            }
+          ]
+        },
+        {
+          "id": "cdr_l1",
+          "label": "CDR-L1",
+          "color": "#FF6347",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "C",
+              "seqId": 24,
+              "resType": "R"
+            },
+            {
+              "chain": "C",
+              "seqId": 25,
+              "resType": "A"
+            },
+            {
+              "chain": "C",
+              "seqId": 26,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 27,
+              "resType": "Q"
+            },
+            {
+              "chain": "C",
+              "seqId": 28,
+              "resType": "G"
+            },
+            {
+              "chain": "C",
+              "seqId": 29,
+              "resType": "I"
+            },
+            {
+              "chain": "C",
+              "seqId": 30,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 31,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 32,
+              "resType": "Y"
+            },
+            {
+              "chain": "C",
+              "seqId": 33,
+              "resType": "L"
+            },
+            {
+              "chain": "C",
+              "seqId": 34,
+              "resType": "A"
+            }
+          ]
+        },
+        {
+          "id": "cdr_l2",
+          "label": "CDR-L2",
+          "color": "#FF4500",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "C",
+              "seqId": 50,
+              "resType": "A"
+            },
+            {
+              "chain": "C",
+              "seqId": 51,
+              "resType": "A"
+            },
+            {
+              "chain": "C",
+              "seqId": 52,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 53,
+              "resType": "T"
+            },
+            {
+              "chain": "C",
+              "seqId": 54,
+              "resType": "L"
+            },
+            {
+              "chain": "C",
+              "seqId": 55,
+              "resType": "Q"
+            },
+            {
+              "chain": "C",
+              "seqId": 56,
+              "resType": "S"
+            }
+          ]
+        },
+        {
+          "id": "cdr_l3",
+          "label": "CDR-L3",
+          "color": "#DC143C",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "C",
+              "seqId": 89,
+              "resType": "Q"
+            },
+            {
+              "chain": "C",
+              "seqId": 90,
+              "resType": "Q"
+            },
+            {
+              "chain": "C",
+              "seqId": 91,
+              "resType": "L"
+            },
+            {
+              "chain": "C",
+              "seqId": 92,
+              "resType": "N"
+            },
+            {
+              "chain": "C",
+              "seqId": 93,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 94,
+              "resType": "Y"
+            },
+            {
+              "chain": "C",
+              "seqId": 95,
+              "resType": "P"
+            },
+            {
+              "chain": "C",
+              "seqId": 96,
+              "resType": "L"
+            },
+            {
+              "chain": "C",
+              "seqId": 97,
+              "resType": "T"
+            }
+          ]
+        }
+      ]
+    },
+    "EU": {
+      "groups": [
+        {
+          "id": "epitope",
+          "label": "Epitope",
+          "color": "#CC44FF",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "A",
+              "seqId": 94,
+              "resType": "H"
+            },
+            {
+              "chain": "A",
+              "seqId": 95,
+              "resType": "S"
+            },
+            {
+              "chain": "A",
+              "seqId": 96,
+              "resType": "F"
+            },
+            {
+              "chain": "A",
+              "seqId": 97,
+              "resType": "P"
+            },
+            {
+              "chain": "A",
+              "seqId": 98,
+              "resType": "H"
+            },
+            {
+              "chain": "A",
+              "seqId": 99,
+              "resType": "P"
+            },
+            {
+              "chain": "A",
+              "seqId": 100,
+              "resType": "L"
+            },
+            {
+              "chain": "A",
+              "seqId": 194,
+              "resType": "E"
+            },
+            {
+              "chain": "A",
+              "seqId": 195,
+              "resType": "F"
+            },
+            {
+              "chain": "A",
+              "seqId": 248,
+              "resType": "H"
+            },
+            {
+              "chain": "A",
+              "seqId": 249,
+              "resType": "Y"
+            },
+            {
+              "chain": "A",
+              "seqId": 251,
+              "resType": "K"
+            },
+            {
+              "chain": "A",
+              "seqId": 252,
+              "resType": "W"
+            },
+            {
+              "chain": "A",
+              "seqId": 255,
+              "resType": "D"
+            },
+            {
+              "chain": "A",
+              "seqId": 256,
+              "resType": "T"
+            },
+            {
+              "chain": "A",
+              "seqId": 258,
+              "resType": "A"
+            },
+            {
+              "chain": "A",
+              "seqId": 259,
+              "resType": "A"
+            },
+            {
+              "chain": "A",
+              "seqId": 260,
+              "resType": "N"
+            }
+          ]
+        },
+        {
+          "id": "cdr_h1",
+          "label": "CDR-H1",
+          "color": "#1E90FF",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "B",
+              "seqId": 26,
+              "resType": "G"
+            },
+            {
+              "chain": "B",
+              "seqId": 27,
+              "resType": "G"
+            },
+            {
+              "chain": "B",
+              "seqId": 28,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 29,
+              "resType": "I"
+            },
+            {
+              "chain": "B",
+              "seqId": 30,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 31,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 32,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 33,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 34,
+              "resType": "W"
+            },
+            {
+              "chain": "B",
+              "seqId": 35,
+              "resType": "S"
+            }
+          ]
+        },
+        {
+          "id": "cdr_h2",
+          "label": "CDR-H2",
+          "color": "#4169E1",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "B",
+              "seqId": 52,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 53,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 54,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 55,
+              "resType": "G"
+            },
+            {
+              "chain": "B",
+              "seqId": 56,
+              "resType": "S"
+            }
+          ]
+        },
+        {
+          "id": "cdr_h3",
+          "label": "CDR-H3",
+          "color": "#0000CD",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "B",
+              "seqId": 96,
+              "resType": "A"
+            },
+            {
+              "chain": "B",
+              "seqId": 97,
+              "resType": "G"
+            },
+            {
+              "chain": "B",
+              "seqId": 98,
+              "resType": "T"
+            },
+            {
+              "chain": "B",
+              "seqId": 99,
+              "resType": "T"
+            },
+            {
+              "chain": "B",
+              "seqId": 100,
+              "resType": "I"
+            },
+            {
+              "chain": "B",
+              "seqId": 101,
+              "resType": "F"
+            },
+            {
+              "chain": "B",
+              "seqId": 102,
+              "resType": "G"
+            },
+            {
+              "chain": "B",
+              "seqId": 103,
+              "resType": "V"
+            },
+            {
+              "chain": "B",
+              "seqId": 104,
+              "resType": "V"
+            },
+            {
+              "chain": "B",
+              "seqId": 105,
+              "resType": "T"
+            },
+            {
+              "chain": "B",
+              "seqId": 106,
+              "resType": "P"
+            },
+            {
+              "chain": "B",
+              "seqId": 107,
+              "resType": "N"
+            },
+            {
+              "chain": "B",
+              "seqId": 108,
+              "resType": "F"
+            },
+            {
+              "chain": "B",
+              "seqId": 109,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 110,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 111,
+              "resType": "G"
+            },
+            {
+              "chain": "B",
+              "seqId": 112,
+              "resType": "M"
+            },
+            {
+              "chain": "B",
+              "seqId": 113,
+              "resType": "D"
+            }
+          ]
+        },
+        {
+          "id": "cdr_l1",
+          "label": "CDR-L1",
+          "color": "#FF6347",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "C",
+              "seqId": 24,
+              "resType": "R"
+            },
+            {
+              "chain": "C",
+              "seqId": 25,
+              "resType": "A"
+            },
+            {
+              "chain": "C",
+              "seqId": 26,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 27,
+              "resType": "Q"
+            },
+            {
+              "chain": "C",
+              "seqId": 28,
+              "resType": "G"
+            },
+            {
+              "chain": "C",
+              "seqId": 29,
+              "resType": "I"
+            },
+            {
+              "chain": "C",
+              "seqId": 30,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 31,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 32,
+              "resType": "Y"
+            },
+            {
+              "chain": "C",
+              "seqId": 33,
+              "resType": "L"
+            },
+            {
+              "chain": "C",
+              "seqId": 34,
+              "resType": "A"
+            }
+          ]
+        },
+        {
+          "id": "cdr_l2",
+          "label": "CDR-L2",
+          "color": "#FF4500",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "C",
+              "seqId": 50,
+              "resType": "A"
+            },
+            {
+              "chain": "C",
+              "seqId": 51,
+              "resType": "A"
+            },
+            {
+              "chain": "C",
+              "seqId": 52,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 53,
+              "resType": "T"
+            },
+            {
+              "chain": "C",
+              "seqId": 54,
+              "resType": "L"
+            },
+            {
+              "chain": "C",
+              "seqId": 55,
+              "resType": "Q"
+            },
+            {
+              "chain": "C",
+              "seqId": 56,
+              "resType": "S"
+            }
+          ]
+        },
+        {
+          "id": "cdr_l3",
+          "label": "CDR-L3",
+          "color": "#DC143C",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "C",
+              "seqId": 89,
+              "resType": "Q"
+            },
+            {
+              "chain": "C",
+              "seqId": 90,
+              "resType": "Q"
+            },
+            {
+              "chain": "C",
+              "seqId": 91,
+              "resType": "L"
+            },
+            {
+              "chain": "C",
+              "seqId": 92,
+              "resType": "N"
+            },
+            {
+              "chain": "C",
+              "seqId": 93,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 94,
+              "resType": "Y"
+            },
+            {
+              "chain": "C",
+              "seqId": 95,
+              "resType": "P"
+            },
+            {
+              "chain": "C",
+              "seqId": 96,
+              "resType": "L"
+            },
+            {
+              "chain": "C",
+              "seqId": 97,
+              "resType": "T"
+            }
+          ]
+        }
+      ]
+    },
+    "AHo": {
+      "groups": [
+        {
+          "id": "epitope",
+          "label": "Epitope",
+          "color": "#CC44FF",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "A",
+              "seqId": 94,
+              "resType": "H"
+            },
+            {
+              "chain": "A",
+              "seqId": 95,
+              "resType": "S"
+            },
+            {
+              "chain": "A",
+              "seqId": 96,
+              "resType": "F"
+            },
+            {
+              "chain": "A",
+              "seqId": 97,
+              "resType": "P"
+            },
+            {
+              "chain": "A",
+              "seqId": 98,
+              "resType": "H"
+            },
+            {
+              "chain": "A",
+              "seqId": 99,
+              "resType": "P"
+            },
+            {
+              "chain": "A",
+              "seqId": 100,
+              "resType": "L"
+            },
+            {
+              "chain": "A",
+              "seqId": 194,
+              "resType": "E"
+            },
+            {
+              "chain": "A",
+              "seqId": 195,
+              "resType": "F"
+            },
+            {
+              "chain": "A",
+              "seqId": 248,
+              "resType": "H"
+            },
+            {
+              "chain": "A",
+              "seqId": 249,
+              "resType": "Y"
+            },
+            {
+              "chain": "A",
+              "seqId": 251,
+              "resType": "K"
+            },
+            {
+              "chain": "A",
+              "seqId": 252,
+              "resType": "W"
+            },
+            {
+              "chain": "A",
+              "seqId": 255,
+              "resType": "D"
+            },
+            {
+              "chain": "A",
+              "seqId": 256,
+              "resType": "T"
+            },
+            {
+              "chain": "A",
+              "seqId": 258,
+              "resType": "A"
+            },
+            {
+              "chain": "A",
+              "seqId": 259,
+              "resType": "A"
+            },
+            {
+              "chain": "A",
+              "seqId": 260,
+              "resType": "N"
+            }
+          ]
+        },
+        {
+          "id": "cdr_h1",
+          "label": "CDR-H1",
+          "color": "#1E90FF",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "B",
+              "seqId": 25,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 26,
+              "resType": "G"
+            },
+            {
+              "chain": "B",
+              "seqId": 27,
+              "resType": "G"
+            },
+            {
+              "chain": "B",
+              "seqId": 28,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 29,
+              "resType": "I"
+            },
+            {
+              "chain": "B",
+              "seqId": 30,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 31,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 32,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 33,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 34,
+              "resType": "W"
+            },
+            {
+              "chain": "B",
+              "seqId": 35,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 36,
+              "resType": "W"
+            },
+            {
+              "chain": "B",
+              "seqId": 37,
+              "resType": "I"
+            },
+            {
+              "chain": "B",
+              "seqId": 38,
+              "resType": "R"
+            }
+          ]
+        },
+        {
+          "id": "cdr_h2",
+          "label": "CDR-H2",
+          "color": "#4169E1",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "B",
+              "seqId": 56,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 57,
+              "resType": "T"
+            },
+            {
+              "chain": "B",
+              "seqId": 58,
+              "resType": "N"
+            },
+            {
+              "chain": "B",
+              "seqId": 59,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 60,
+              "resType": "N"
+            },
+            {
+              "chain": "B",
+              "seqId": 61,
+              "resType": "P"
+            },
+            {
+              "chain": "B",
+              "seqId": 62,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 63,
+              "resType": "L"
+            },
+            {
+              "chain": "B",
+              "seqId": 64,
+              "resType": "K"
+            },
+            {
+              "chain": "B",
+              "seqId": 65,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 66,
+              "resType": "R"
+            },
+            {
+              "chain": "B",
+              "seqId": 67,
+              "resType": "V"
+            },
+            {
+              "chain": "B",
+              "seqId": 68,
+              "resType": "T"
+            },
+            {
+              "chain": "B",
+              "seqId": 69,
+              "resType": "I"
+            }
+          ]
+        },
+        {
+          "id": "cdr_h3",
+          "label": "CDR-H3",
+          "color": "#0000CD",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "B",
+              "seqId": 97,
+              "resType": "G"
+            },
+            {
+              "chain": "B",
+              "seqId": 98,
+              "resType": "T"
+            },
+            {
+              "chain": "B",
+              "seqId": 99,
+              "resType": "T"
+            },
+            {
+              "chain": "B",
+              "seqId": 100,
+              "resType": "I"
+            },
+            {
+              "chain": "B",
+              "seqId": 101,
+              "resType": "F"
+            },
+            {
+              "chain": "B",
+              "seqId": 102,
+              "resType": "G"
+            },
+            {
+              "chain": "B",
+              "seqId": 103,
+              "resType": "V"
+            },
+            {
+              "chain": "B",
+              "seqId": 104,
+              "resType": "V"
+            },
+            {
+              "chain": "B",
+              "seqId": 105,
+              "resType": "T"
+            },
+            {
+              "chain": "B",
+              "seqId": 106,
+              "resType": "P"
+            },
+            {
+              "chain": "B",
+              "seqId": 107,
+              "resType": "N"
+            },
+            {
+              "chain": "B",
+              "seqId": 108,
+              "resType": "F"
+            },
+            {
+              "chain": "B",
+              "seqId": 109,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 110,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 111,
+              "resType": "G"
+            },
+            {
+              "chain": "B",
+              "seqId": 112,
+              "resType": "M"
+            },
+            {
+              "chain": "B",
+              "seqId": 113,
+              "resType": "D"
+            }
+          ]
+        },
+        {
+          "id": "cdr_l1",
+          "label": "CDR-L1",
+          "color": "#FF6347",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "C",
+              "seqId": 24,
+              "resType": "R"
+            },
+            {
+              "chain": "C",
+              "seqId": 25,
+              "resType": "A"
+            },
+            {
+              "chain": "C",
+              "seqId": 26,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 27,
+              "resType": "Q"
+            },
+            {
+              "chain": "C",
+              "seqId": 28,
+              "resType": "G"
+            },
+            {
+              "chain": "C",
+              "seqId": 29,
+              "resType": "I"
+            },
+            {
+              "chain": "C",
+              "seqId": 30,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 31,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 32,
+              "resType": "Y"
+            },
+            {
+              "chain": "C",
+              "seqId": 33,
+              "resType": "L"
+            },
+            {
+              "chain": "C",
+              "seqId": 34,
+              "resType": "A"
+            },
+            {
+              "chain": "C",
+              "seqId": 35,
+              "resType": "W"
+            },
+            {
+              "chain": "C",
+              "seqId": 36,
+              "resType": "Y"
+            },
+            {
+              "chain": "C",
+              "seqId": 37,
+              "resType": "Q"
+            },
+            {
+              "chain": "C",
+              "seqId": 38,
+              "resType": "Q"
+            },
+            {
+              "chain": "C",
+              "seqId": 39,
+              "resType": "K"
+            },
+            {
+              "chain": "C",
+              "seqId": 40,
+              "resType": "P"
+            },
+            {
+              "chain": "C",
+              "seqId": 41,
+              "resType": "G"
+            },
+            {
+              "chain": "C",
+              "seqId": 42,
+              "resType": "K"
+            }
+          ]
+        },
+        {
+          "id": "cdr_l2",
+          "label": "CDR-L2",
+          "color": "#FF4500",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "C",
+              "seqId": 58,
+              "resType": "V"
+            },
+            {
+              "chain": "C",
+              "seqId": 59,
+              "resType": "P"
+            },
+            {
+              "chain": "C",
+              "seqId": 60,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 61,
+              "resType": "R"
+            },
+            {
+              "chain": "C",
+              "seqId": 62,
+              "resType": "F"
+            },
+            {
+              "chain": "C",
+              "seqId": 63,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 64,
+              "resType": "G"
+            },
+            {
+              "chain": "C",
+              "seqId": 65,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 66,
+              "resType": "G"
+            },
+            {
+              "chain": "C",
+              "seqId": 67,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 68,
+              "resType": "G"
+            },
+            {
+              "chain": "C",
+              "seqId": 69,
+              "resType": "T"
+            },
+            {
+              "chain": "C",
+              "seqId": 70,
+              "resType": "E"
+            },
+            {
+              "chain": "C",
+              "seqId": 71,
+              "resType": "F"
+            },
+            {
+              "chain": "C",
+              "seqId": 72,
+              "resType": "T"
+            }
+          ]
+        },
+        {
+          "id": "cdr_l3",
+          "label": "CDR-L3",
+          "color": "#DC143C",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "C",
+              "seqId": 89,
+              "resType": "Q"
+            },
+            {
+              "chain": "C",
+              "seqId": 90,
+              "resType": "Q"
+            },
+            {
+              "chain": "C",
+              "seqId": 91,
+              "resType": "L"
+            },
+            {
+              "chain": "C",
+              "seqId": 92,
+              "resType": "N"
+            },
+            {
+              "chain": "C",
+              "seqId": 93,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 94,
+              "resType": "Y"
+            },
+            {
+              "chain": "C",
+              "seqId": 95,
+              "resType": "P"
+            },
+            {
+              "chain": "C",
+              "seqId": 96,
+              "resType": "L"
+            },
+            {
+              "chain": "C",
+              "seqId": 97,
+              "resType": "T"
+            }
+          ]
+        }
+      ]
+    },
+    "ANARCI": {
+      "groups": [
+        {
+          "id": "epitope",
+          "label": "Epitope",
+          "color": "#CC44FF",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "A",
+              "seqId": 94,
+              "resType": "H"
+            },
+            {
+              "chain": "A",
+              "seqId": 95,
+              "resType": "S"
+            },
+            {
+              "chain": "A",
+              "seqId": 96,
+              "resType": "F"
+            },
+            {
+              "chain": "A",
+              "seqId": 97,
+              "resType": "P"
+            },
+            {
+              "chain": "A",
+              "seqId": 98,
+              "resType": "H"
+            },
+            {
+              "chain": "A",
+              "seqId": 99,
+              "resType": "P"
+            },
+            {
+              "chain": "A",
+              "seqId": 100,
+              "resType": "L"
+            },
+            {
+              "chain": "A",
+              "seqId": 194,
+              "resType": "E"
+            },
+            {
+              "chain": "A",
+              "seqId": 195,
+              "resType": "F"
+            },
+            {
+              "chain": "A",
+              "seqId": 248,
+              "resType": "H"
+            },
+            {
+              "chain": "A",
+              "seqId": 249,
+              "resType": "Y"
+            },
+            {
+              "chain": "A",
+              "seqId": 251,
+              "resType": "K"
+            },
+            {
+              "chain": "A",
+              "seqId": 252,
+              "resType": "W"
+            },
+            {
+              "chain": "A",
+              "seqId": 255,
+              "resType": "D"
+            },
+            {
+              "chain": "A",
+              "seqId": 256,
+              "resType": "T"
+            },
+            {
+              "chain": "A",
+              "seqId": 258,
+              "resType": "A"
+            },
+            {
+              "chain": "A",
+              "seqId": 259,
+              "resType": "A"
+            },
+            {
+              "chain": "A",
+              "seqId": 260,
+              "resType": "N"
+            }
+          ]
+        },
+        {
+          "id": "cdr_h1",
+          "label": "CDR-H1",
+          "color": "#1E90FF",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "B",
+              "seqId": 27,
+              "resType": "G"
+            },
+            {
+              "chain": "B",
+              "seqId": 28,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 29,
+              "resType": "I"
+            },
+            {
+              "chain": "B",
+              "seqId": 30,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 31,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 32,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 33,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 34,
+              "resType": "W"
+            },
+            {
+              "chain": "B",
+              "seqId": 35,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 36,
+              "resType": "W"
+            },
+            {
+              "chain": "B",
+              "seqId": 37,
+              "resType": "I"
+            },
+            {
+              "chain": "B",
+              "seqId": 38,
+              "resType": "R"
+            }
+          ]
+        },
+        {
+          "id": "cdr_h2",
+          "label": "CDR-H2",
+          "color": "#4169E1",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "B",
+              "seqId": 56,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 57,
+              "resType": "T"
+            },
+            {
+              "chain": "B",
+              "seqId": 58,
+              "resType": "N"
+            },
+            {
+              "chain": "B",
+              "seqId": 59,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 60,
+              "resType": "N"
+            },
+            {
+              "chain": "B",
+              "seqId": 61,
+              "resType": "P"
+            },
+            {
+              "chain": "B",
+              "seqId": 62,
+              "resType": "S"
+            },
+            {
+              "chain": "B",
+              "seqId": 63,
+              "resType": "L"
+            },
+            {
+              "chain": "B",
+              "seqId": 64,
+              "resType": "K"
+            },
+            {
+              "chain": "B",
+              "seqId": 65,
+              "resType": "S"
+            }
+          ]
+        },
+        {
+          "id": "cdr_h3",
+          "label": "CDR-H3",
+          "color": "#0000CD",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "B",
+              "seqId": 97,
+              "resType": "G"
+            },
+            {
+              "chain": "B",
+              "seqId": 98,
+              "resType": "T"
+            },
+            {
+              "chain": "B",
+              "seqId": 99,
+              "resType": "T"
+            },
+            {
+              "chain": "B",
+              "seqId": 100,
+              "resType": "I"
+            },
+            {
+              "chain": "B",
+              "seqId": 101,
+              "resType": "F"
+            },
+            {
+              "chain": "B",
+              "seqId": 102,
+              "resType": "G"
+            },
+            {
+              "chain": "B",
+              "seqId": 103,
+              "resType": "V"
+            },
+            {
+              "chain": "B",
+              "seqId": 104,
+              "resType": "V"
+            },
+            {
+              "chain": "B",
+              "seqId": 105,
+              "resType": "T"
+            },
+            {
+              "chain": "B",
+              "seqId": 106,
+              "resType": "P"
+            },
+            {
+              "chain": "B",
+              "seqId": 107,
+              "resType": "N"
+            },
+            {
+              "chain": "B",
+              "seqId": 108,
+              "resType": "F"
+            },
+            {
+              "chain": "B",
+              "seqId": 109,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 110,
+              "resType": "Y"
+            },
+            {
+              "chain": "B",
+              "seqId": 111,
+              "resType": "G"
+            },
+            {
+              "chain": "B",
+              "seqId": 112,
+              "resType": "M"
+            },
+            {
+              "chain": "B",
+              "seqId": 113,
+              "resType": "D"
+            }
+          ]
+        },
+        {
+          "id": "cdr_l1",
+          "label": "CDR-L1",
+          "color": "#FF6347",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "C",
+              "seqId": 24,
+              "resType": "R"
+            },
+            {
+              "chain": "C",
+              "seqId": 25,
+              "resType": "A"
+            },
+            {
+              "chain": "C",
+              "seqId": 26,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 27,
+              "resType": "Q"
+            },
+            {
+              "chain": "C",
+              "seqId": 28,
+              "resType": "G"
+            },
+            {
+              "chain": "C",
+              "seqId": 29,
+              "resType": "I"
+            },
+            {
+              "chain": "C",
+              "seqId": 30,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 31,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 32,
+              "resType": "Y"
+            },
+            {
+              "chain": "C",
+              "seqId": 33,
+              "resType": "L"
+            },
+            {
+              "chain": "C",
+              "seqId": 34,
+              "resType": "A"
+            }
+          ]
+        },
+        {
+          "id": "cdr_l2",
+          "label": "CDR-L2",
+          "color": "#FF4500",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "C",
+              "seqId": 50,
+              "resType": "A"
+            },
+            {
+              "chain": "C",
+              "seqId": 51,
+              "resType": "A"
+            },
+            {
+              "chain": "C",
+              "seqId": 52,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 53,
+              "resType": "T"
+            },
+            {
+              "chain": "C",
+              "seqId": 54,
+              "resType": "L"
+            },
+            {
+              "chain": "C",
+              "seqId": 55,
+              "resType": "Q"
+            },
+            {
+              "chain": "C",
+              "seqId": 56,
+              "resType": "S"
+            }
+          ]
+        },
+        {
+          "id": "cdr_l3",
+          "label": "CDR-L3",
+          "color": "#DC143C",
+          "reprType": "ball-and-stick",
+          "residues": [
+            {
+              "chain": "C",
+              "seqId": 89,
+              "resType": "Q"
+            },
+            {
+              "chain": "C",
+              "seqId": 90,
+              "resType": "Q"
+            },
+            {
+              "chain": "C",
+              "seqId": 91,
+              "resType": "L"
+            },
+            {
+              "chain": "C",
+              "seqId": 92,
+              "resType": "N"
+            },
+            {
+              "chain": "C",
+              "seqId": 93,
+              "resType": "S"
+            },
+            {
+              "chain": "C",
+              "seqId": 94,
+              "resType": "Y"
+            },
+            {
+              "chain": "C",
+              "seqId": 95,
+              "resType": "P"
+            },
+            {
+              "chain": "C",
+              "seqId": 96,
+              "resType": "L"
+            },
+            {
+              "chain": "C",
+              "seqId": 97,
+              "resType": "T"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
