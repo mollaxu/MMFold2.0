@@ -314,6 +314,71 @@
   color: #f87171;
 }
 
+/* ── Quick Paste ── */
+.qp-wrap {
+  border: 1px solid #333;
+  border-radius: 12px;
+  background: #111;
+  margin-bottom: 16px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.qp-wrap:focus-within { border-color: #555; }
+.qp-textarea {
+  width: 100%;
+  min-height: 200px;
+  box-sizing: border-box;
+  padding: 20px;
+  border: none;
+  background: transparent;
+  color: #ddd;
+  font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+}
+.qp-textarea::placeholder { color: #444; }
+.qp-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  border-top: 1px solid #222;
+  background: #0d0d0d;
+}
+.qp-hint {
+  font-size: 11px;
+  color: #555;
+}
+.qp-btns {
+  display: flex;
+  gap: 8px;
+}
+.qp-btn-secondary {
+  padding: 6px 14px;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: transparent;
+  color: #888;
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.qp-btn-secondary:hover { color: #ccc; border-color: #555; }
+.qp-btn-parse {
+  padding: 6px 18px;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.qp-btn-parse:hover { background: #1d4ed8; }
+.qp-btn-parse:disabled { opacity: 0.4; cursor: default; }
+
 /* ── Entity cards ── */
 .home-entities { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
 

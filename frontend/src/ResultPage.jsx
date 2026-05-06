@@ -65,7 +65,7 @@ export default function ResultPage({ task, onBack }) {
   const [loadingFull, setLoadingFull] = useState(false)
   const [annotations, setAnnotations] = useState(null)
   const [hoveredGroupId, setHoveredGroupId] = useState(null)
-  const [focusedResidue, setFocusedResidue] = useState(null)  // {chain, seqId, resType}
+  const [focusedResidues, setFocusedResidues] = useState([])  // [{chain, seqId, resType}, ...]
   const [information, setInformation] = useState(null)
   const [promptIndex, setPromptIndex] = useState(0)
   const [activeScheme, setActiveScheme] = useState('IMGT')
@@ -119,7 +119,7 @@ export default function ResultPage({ task, onBack }) {
   useEffect(() => {
     setAnnotations(null)
     setHoveredGroupId(null)
-    setFocusedResidue(null)
+    setFocusedResidues([])
     setActiveScheme('IMGT')
     setSelectedGroupIds(new Set())
     setHomologs(null)
@@ -178,14 +178,14 @@ export default function ResultPage({ task, onBack }) {
       const group = activeGroups.find(g => g.id === hoveredGroupId)
       if (group) residues.push(...group.residues)
     }
-    if (focusedResidue) {
-      residues.push(focusedResidue)
+    if (focusedResidues.length) {
+      residues.push(...focusedResidues)
     }
     if (hoveredIxResidue) {
       residues.push(hoveredIxResidue)
     }
     return residues.length > 0 ? residues : null
-  }, [hoveredGroupId, selectedGroupIds, activeGroups, focusedResidue, hoveredIxResidue])
+  }, [hoveredGroupId, selectedGroupIds, activeGroups, focusedResidues, hoveredIxResidue])
 
   const toggleGroupSelection = (groupId) => {
     setSelectedGroupIds(prev => {
@@ -197,16 +197,19 @@ export default function ResultPage({ task, onBack }) {
 
   const clearSelections = () => {
     setSelectedGroupIds(new Set())
-    setFocusedResidue(null)
+    setFocusedResidues([])
   }
 
-  // Click residue: focus camera (toggle off if same)
+  const lastFocused = focusedResidues[focusedResidues.length - 1] ?? null
+
+  // Click residue: toggle in/out of multi-selection
   const handleResidueClick = (residue, e) => {
     e?.stopPropagation?.()
-    if (!residue) { setFocusedResidue(null); return }
-    setFocusedResidue(prev =>
-      prev?.chain === residue.chain && prev?.seqId === residue.seqId ? null : residue
-    )
+    if (!residue) { setFocusedResidues([]); return }
+    setFocusedResidues(prev => {
+      const idx = prev.findIndex(r => r.chain === residue.chain && r.seqId === residue.seqId)
+      return idx >= 0 ? prev.filter((_, i) => i !== idx) : [...prev, residue]
+    })
   }
 
   // Resolve antibody / antigen chains from information
@@ -240,6 +243,18 @@ export default function ResultPage({ task, onBack }) {
     ? homologs?.find(h => h.pdbId === superimposeId)?.structureUrl ?? null
     : null
   const summary = summaries[activeSample]
+
+  const focusedIxTypes = useMemo(() => {
+    if (!focusedResidues.length || !interactions) return null
+    const match = (c, s) => focusedResidues.some(r => r.chain === c && r.seqId === s)
+    const types = []
+    if ((interactions.hBonds ?? []).some(b => match(b.donorChain, b.donorPosition) || match(b.acceptorChain, b.acceptorPosition))) types.push('hBond')
+    if ((interactions.piPiStacks ?? []).some(b => match(b.chain1, b.position1) || match(b.chain2, b.position2))) types.push('piPi')
+    if ((interactions.piCations ?? []).some(b => match(b.ringChain, b.ringPosition) || match(b.cationChain, b.cationPosition))) types.push('piCation')
+    if ((interactions.saltBridges ?? []).some(b => match(b.chain1, b.position1) || match(b.chain2, b.position2))) types.push('saltBridge')
+    if ((interactions.hydrophobics ?? []).some(b => match(b.chain1, b.position1) || match(b.chain2, b.position2))) types.push('hydrophobic')
+    return types.length ? types : null
+  }, [focusedResidues, interactions])
 
   return (
     <div className="rp-page">
@@ -322,7 +337,16 @@ export default function ResultPage({ task, onBack }) {
                 </button>
               </div>
             </div>
-            {colorMode === 'plddt' && (
+            {focusedIxTypes ? (
+              <div className="rp-ix-legend">
+                {focusedIxTypes.map(t => (
+                  <span key={t} className="rp-ix-legend-item">
+                    <span className="rp-ix-legend-dot" style={{ background: IX_LEGEND[t]?.color }} />
+                    {IX_LEGEND[t]?.label}
+                  </span>
+                ))}
+              </div>
+            ) : colorMode === 'plddt' ? (
               <div className="rp-plddt-legend">
                 <div className="rp-plddt-item">
                   <span>Very high (pLDDT &gt; 90)</span>
@@ -341,8 +365,7 @@ export default function ResultPage({ task, onBack }) {
                   <div className="rp-plddt-bar" style={{ background: 'linear-gradient(to right, #ff9933, #ff6600)' }} />
                 </div>
               </div>
-            )}
-            {colorMode === 'electrostatic' && (
+            ) : colorMode === 'electrostatic' ? (
               <div className="rp-electro-legend">
                 <div className="rp-electro-labels">
                   <span>Negative (−)</span>
@@ -351,25 +374,26 @@ export default function ResultPage({ task, onBack }) {
                 </div>
                 <div className="rp-electro-bar" />
               </div>
-            )}
+            ) : null}
             <div className="rp-viewer-card" style={{ flex: 1, minHeight: 0 }}>
               <MolstarViewer
                 structureUrl={structureUrl}
                 highlightedResidues={highlightedResidues}
-                focusedResidue={focusedResidue}
+                focusedResidue={lastFocused}
                 representationMode={reprMode}
                 taskType={taskType}
                 superimposeUrl={superimposeUrl}
                 onResidueClick={handleResidueClick}
                 colorMode={colorMode}
                 autoFocusLigand={taskType === 'enzyme'}
+                interactions={interactions}
               />
             </div>
             {information && (
               <SequenceBar
                 entities={information.entities}
                 groups={activeGroups}
-                focusedResidue={focusedResidue}
+                focusedResidues={focusedResidues}
                 onResidueClick={handleResidueClick}
               />
             )}
@@ -486,6 +510,49 @@ export default function ResultPage({ task, onBack }) {
               </div>
             </div>
 
+            {/* Interactions */}
+            <InteractionsCard
+              interactions={interactions}
+              loading={interactionsLoading}
+              focusedResidues={focusedResidues}
+              taskType={taskType}
+              annotationGroups={activeGroups}
+              structureUrl={structureUrl}
+              abChains={abChains}
+              onResidueFocus={(chain, seqId, resName) => {
+                const residue = { chain, seqId, resType: resName }
+                setFocusedResidues(prev => {
+                  const idx = prev.findIndex(r => r.chain === chain && r.seqId === seqId)
+                  return idx >= 0 ? prev.filter((_, i) => i !== idx) : [...prev, residue]
+                })
+              }}
+              onResidueHover={(chain, seqId, resName) => {
+                setHoveredIxResidue(chain ? { chain, seqId, resType: resName } : null)
+              }}
+            />
+
+            {/* Liability Scan */}
+            {taskType === 'antibody' && liabilityHits.length > 0 && (
+              <LiabilityScanCard
+                hits={liabilityHits}
+                openGroups={liabilityOpen}
+                onToggleGroup={g => setLiabilityOpen(prev => {
+                  const next = new Set(prev)
+                  next.has(g) ? next.delete(g) : next.add(g)
+                  return next
+                })}
+                focusedResidues={focusedResidues}
+                onHitClick={(hit) => {
+                  const seqId = hit.start + 1
+                  const residue = { chain: hit.chain, seqId, resType: hit.matchedSeq[0] }
+                  setFocusedResidues(prev => {
+                    const idx = prev.findIndex(r => r.chain === hit.chain && r.seqId === seqId)
+                    return idx >= 0 ? prev.filter((_, i) => i !== idx) : [...prev, residue]
+                  })
+                }}
+              />
+            )}
+
             {/* Annotations card */}
             <div className="rp-anno-panel">
               <div className="rp-anno-header">
@@ -540,7 +607,7 @@ export default function ResultPage({ task, onBack }) {
                         </div>
                         <div className="rp-anno-tags">
                           {group.residues.map(r => {
-                            const isFocused = focusedResidue?.chain === r.chain && focusedResidue?.seqId === r.seqId
+                            const isFocused = focusedResidues.some(fr => fr.chain === r.chain && fr.seqId === r.seqId)
                             return (
                               <span
                                 key={`${r.chain}${r.seqId}`}
@@ -560,62 +627,6 @@ export default function ResultPage({ task, onBack }) {
               )}
             </div>
 
-
-            {/* Interactions */}
-            <InteractionsCard
-              interactions={interactions}
-              loading={interactionsLoading}
-              focusedResidue={focusedResidue}
-              taskType={taskType}
-              annotationGroups={activeGroups}
-              onResidueFocus={(chain, seqId, resName) => {
-                setFocusedResidue(prev =>
-                  prev?.chain === chain && prev?.seqId === seqId
-                    ? null
-                    : { chain, seqId, resType: resName }
-                )
-              }}
-              onResidueHover={(chain, seqId, resName) => {
-                setHoveredIxResidue(chain ? { chain, seqId, resType: resName } : null)
-              }}
-            />
-
-            {/* Liability Scan */}
-            {taskType === 'antibody' && liabilityHits.length > 0 && (
-              <LiabilityScanCard
-                hits={liabilityHits}
-                openGroups={liabilityOpen}
-                onToggleGroup={g => setLiabilityOpen(prev => {
-                  const next = new Set(prev)
-                  next.has(g) ? next.delete(g) : next.add(g)
-                  return next
-                })}
-                focusedResidue={focusedResidue}
-                onHitClick={(hit) => {
-                  const seqId = hit.start + 1
-                  setFocusedResidue(prev =>
-                    prev?.chain === hit.chain && prev?.seqId === seqId ? null : { chain: hit.chain, seqId, resType: hit.matchedSeq[0] }
-                  )
-                }}
-              />
-            )}
-
-            {/* PAE */}
-            <div>
-              <h2 className="rp-section-title" style={{ marginBottom: 12 }}>Predicted Aligned Error</h2>
-              <div className="rp-viewer-card rp-pae-card">
-                {loadingFull ? (
-                  <div className="rp-loading">Loading PAE data...</div>
-                ) : fullData ? (
-                  <PAECanvas
-                    paeData={fullData.pae}
-                    tokenChainIds={fullData.token_chain_ids}
-                    tokenResIds={fullData.token_res_ids}
-                  />
-                ) : null}
-              </div>
-            </div>
-
             {/* Information */}
             {information && <InformationSection info={information} />}
 
@@ -623,15 +634,15 @@ export default function ResultPage({ task, onBack }) {
         </div>
       </div>
 
-      <ResidueInspector
-        residue={focusedResidue ?? hoveredIxResidue}
-        pinned={!!focusedResidue}
+      {/* <ResidueInspector
+        residue={lastFocused ?? hoveredIxResidue}
+        pinned={!!lastFocused}
         annotationGroups={activeGroups}
         interactions={interactions}
         liabilityHits={liabilityHits}
         information={information}
-        onClose={() => setFocusedResidue(null)}
-      />
+        onClose={() => setFocusedResidues([])}
+      /> */}
     </div>
   )
 }
@@ -651,7 +662,7 @@ function formatPos(h) {
   return start === end ? `${h.chain}${start}` : `${h.chain}${start}–${end}`
 }
 
-function LiabilityScanCard({ hits, openGroups, onToggleGroup, focusedResidue, onHitClick }) {
+function LiabilityScanCard({ hits, openGroups, onToggleGroup, focusedResidues, onHitClick }) {
   const [filterOpen, setFilterOpen] = useState(false)
   const [filterRisk, setFilterRisk] = useState([])
   const [filterChains, setFilterChains] = useState([])
@@ -788,8 +799,9 @@ function LiabilityScanCard({ hits, openGroups, onToggleGroup, focusedResidue, on
                   {items.map((h, i) => {
                     const spanStart = h.start + 1
                     const spanEnd = h.start + h.matchedSeq.length
-                    const isFocused = focusedResidue?.chain === h.chain
-                      && focusedResidue.seqId >= spanStart && focusedResidue.seqId <= spanEnd
+                    const isFocused = focusedResidues.some(fr =>
+                      fr.chain === h.chain && fr.seqId >= spanStart && fr.seqId <= spanEnd
+                    )
                     return (
                       <div
                         key={i}
@@ -818,6 +830,8 @@ function LiabilityScanCard({ hits, openGroups, onToggleGroup, focusedResidue, on
 }
 
 // ── Residue Inspector floating panel ─────────────────────────────────
+
+const AA3 = { A:'ALA',R:'ARG',N:'ASN',D:'ASP',C:'CYS',E:'GLU',Q:'GLN',G:'GLY',H:'HIS',I:'ILE',L:'LEU',K:'LYS',M:'MET',F:'PHE',P:'PRO',S:'SER',T:'THR',W:'TRP',Y:'TYR',V:'VAL' }
 
 const IX_LABELS = { hBonds: 'H-Bond', piPiStacks: 'π-π Stack', piCations: 'π-Cation', saltBridges: 'Salt Bridge', hydrophobics: 'Hydrophobic' }
 
@@ -879,7 +893,7 @@ function ResidueInspector({ residue, pinned, annotationGroups, interactions, lia
       <div className="rp-inspector-header">
         <span className="rp-inspector-id">
           {residue.chain}{residue.seqId}
-          <span className="rp-inspector-res">{residue.resType}</span>
+          <span className="rp-inspector-res">{AA3[residue.resType] || residue.resType}</span>
         </span>
         {chainLabel && <span className="rp-inspector-chain">{chainLabel}</span>}
         {pinned && <button className="rp-inspector-close" onClick={onClose}>×</button>}
@@ -971,7 +985,8 @@ function groupByEpitope(rows, antigenKey, antibodyKey, cdrMap) {
   return grouped
 }
 
-function InteractionsCard({ interactions, loading, focusedResidue, taskType, annotationGroups, onResidueFocus, onResidueHover }) {
+function InteractionsCard({ interactions, loading, focusedResidues, taskType, annotationGroups, structureUrl, abChains, onResidueFocus, onResidueHover }) {
+  const [viewMode, setViewMode] = useState('2d')
   const [openSections, setOpenSections] = useState(new Set(['hBond']))
   const [selectedRow, setSelectedRow] = useState(null)
   const [selectedPair, setSelectedPair] = useState(null)
@@ -1018,24 +1033,38 @@ function InteractionsCard({ interactions, loading, focusedResidue, taskType, ann
   }
 
   const isRowExternallyFocused = (side1Chain, side1Pos, side2Chain, side2Pos) => {
-    if (!focusedResidue) return false
-    const { chain: fc, seqId: fs } = focusedResidue
-    return (fc === side1Chain && fs === side1Pos) || (fc === side2Chain && fs === side2Pos)
+    if (!focusedResidues.length) return false
+    return focusedResidues.some(({ chain: fc, seqId: fs }) =>
+      (fc === side1Chain && fs === side1Pos) || (fc === side2Chain && fs === side2Pos)
+    )
   }
 
   return (
     <div className="rp-anno-panel">
       <div className="rp-anno-header">
         <span className="rp-anno-title">Non-Covalent Bond</span>
-        {isAntibody && cdrMap.size > 0 && (
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          {isAntibody && cdrMap.size > 0 && (
+            <div className="rp-ix-filter-toggle">
+              <button className={`rp-ix-filter-btn ${epitopeOnly ? 'active' : ''}`} onClick={() => setEpitopeOnly(true)}>CDR</button>
+              <button className={`rp-ix-filter-btn ${!epitopeOnly ? 'active' : ''}`} onClick={() => setEpitopeOnly(false)}>All</button>
+            </div>
+          )}
           <div className="rp-ix-filter-toggle">
-            <button className={`rp-ix-filter-btn ${epitopeOnly ? 'active' : ''}`} onClick={() => setEpitopeOnly(true)}>CDR</button>
-            <button className={`rp-ix-filter-btn ${!epitopeOnly ? 'active' : ''}`} onClick={() => setEpitopeOnly(false)}>All</button>
+            <button className={`rp-ix-filter-btn ${viewMode === 'table' ? 'active' : ''}`} onClick={() => setViewMode('table')}>Table</button>
+            <button className={`rp-ix-filter-btn ${viewMode === '2d' ? 'active' : ''}`} onClick={() => setViewMode('2d')}>2D</button>
           </div>
-        )}
+        </div>
       </div>
       {loading && <div className="rp-anno-loading">Analyzing interactions...</div>}
-      {!loading && interactions && (
+      {!loading && interactions && viewMode === '2d' && (
+        <InteractionDiagram2D
+          interactions={{ hBonds, piPiStacks, piCations, saltBridges, hydrophobics }}
+          taskType={taskType} structureUrl={structureUrl}
+          abChains={abChains} cdrMap={cdrMap}
+          onResidueFocus={onResidueFocus} />
+      )}
+      {!loading && interactions && viewMode === 'table' && (
         <div className="rp-interactions-body">
 
           {/* H-Bond */}
@@ -1227,6 +1256,673 @@ function InteractionsCard({ interactions, loading, focusedResidue, taskType, ann
   )
 }
 
+// ── 2D Interaction Diagram ───────────────────────────────────────────
+
+const RESIDUE_PROPERTY_COLORS = {
+  hydrophobic: '#4caf50',
+  positive: '#5b8ff9',
+  negative: '#ff7043',
+  polar: '#26c6da',
+  special: '#bdbdbd',
+}
+
+const RESIDUE_PROPERTY = {
+  ALA: 'hydrophobic', VAL: 'hydrophobic', LEU: 'hydrophobic', ILE: 'hydrophobic',
+  PHE: 'hydrophobic', TRP: 'hydrophobic', MET: 'hydrophobic', PRO: 'hydrophobic',
+  ARG: 'positive', LYS: 'positive', HIS: 'positive',
+  ASP: 'negative', GLU: 'negative',
+  SER: 'polar', THR: 'polar', ASN: 'polar', GLN: 'polar', CYS: 'polar', TYR: 'polar',
+  GLY: 'special',
+}
+
+const IX_TYPE_COLORS = {
+  hBond: '#00cc66',
+  piPi: '#ff8800',
+  piCation: '#ffcc00',
+  saltBridge: '#ff4444',
+  hydrophobic: '#bb88ff',
+}
+
+const IX_TYPE_LABELS = {
+  hBond: 'H-Bond',
+  piPi: 'π-π Stack',
+  piCation: 'π-Cation',
+  saltBridge: 'Salt Bridge',
+  hydrophobic: 'Hydrophobic',
+}
+
+function InteractionDiagram2D({ interactions, taskType, structureUrl, abChains, cdrMap, onResidueFocus }) {
+  const [ligandData, setLigandData] = useState(null)
+
+  useEffect(() => {
+    if (!structureUrl || taskType !== 'enzyme') { setLigandData(null); return }
+    fetch(structureUrl).then(r => r.text()).then(text => {
+      const atoms = []
+      for (const line of text.split('\n')) {
+        const rec = line.substring(0, 6).trim()
+        if (rec !== 'HETATM') continue
+        const element = line.substring(76, 78).trim()
+        if (!element || element === 'H') continue
+        atoms.push({
+          serial: parseInt(line.substring(6, 11)),
+          atomName: line.substring(12, 16).trim(),
+          resName: line.substring(17, 20).trim(),
+          chain: line.substring(21, 22).trim(),
+          resSeq: parseInt(line.substring(22, 26)),
+          x: parseFloat(line.substring(30, 38)),
+          y: parseFloat(line.substring(38, 46)),
+          z: parseFloat(line.substring(46, 54)),
+          element,
+        })
+      }
+      if (!atoms.length) { setLigandData(null); return }
+
+      const bonds = []
+      for (let i = 0; i < atoms.length; i++) {
+        for (let j = i + 1; j < atoms.length; j++) {
+          const dx = atoms[i].x - atoms[j].x, dy = atoms[i].y - atoms[j].y, dz = atoms[i].z - atoms[j].z
+          if (Math.sqrt(dx * dx + dy * dy + dz * dz) < 1.9) bonds.push([i, j])
+        }
+      }
+
+      const coords = atoms.map(a => [a.x, a.y, a.z])
+      const n = coords.length
+      const mean = [0, 0, 0]
+      for (const c of coords) { mean[0] += c[0]; mean[1] += c[1]; mean[2] += c[2] }
+      mean[0] /= n; mean[1] /= n; mean[2] /= n
+      const centered = coords.map(c => [c[0] - mean[0], c[1] - mean[1], c[2] - mean[2]])
+
+      const cov = Array.from({ length: 3 }, () => [0, 0, 0])
+      for (const c of centered) {
+        for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) cov[i][j] += c[i] * c[j]
+      }
+
+      let v1 = [1, 0, 0], v2 = [0, 1, 0]
+      for (let iter = 0; iter < 50; iter++) {
+        const nv = [0, 0, 0]
+        for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) nv[i] += cov[i][j] * v1[j]
+        const len = Math.sqrt(nv[0] ** 2 + nv[1] ** 2 + nv[2] ** 2) || 1
+        v1 = nv.map(x => x / len)
+      }
+      const dot1 = v2[0] * v1[0] + v2[1] * v1[1] + v2[2] * v1[2]
+      v2 = [v2[0] - dot1 * v1[0], v2[1] - dot1 * v1[1], v2[2] - dot1 * v1[2]]
+      const cov2 = Array.from({ length: 3 }, () => [0, 0, 0])
+      for (const c of centered) {
+        const proj = c[0] * v1[0] + c[1] * v1[1] + c[2] * v1[2]
+        const r = [c[0] - proj * v1[0], c[1] - proj * v1[1], c[2] - proj * v1[2]]
+        for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) cov2[i][j] += r[i] * r[j]
+      }
+      for (let iter = 0; iter < 50; iter++) {
+        const nv = [0, 0, 0]
+        for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) nv[i] += cov2[i][j] * v2[j]
+        const len = Math.sqrt(nv[0] ** 2 + nv[1] ** 2 + nv[2] ** 2) || 1
+        v2 = nv.map(x => x / len)
+      }
+
+      const proj2d = centered.map(c => ({
+        x: c[0] * v1[0] + c[1] * v1[1] + c[2] * v1[2],
+        y: c[0] * v2[0] + c[1] * v2[1] + c[2] * v2[2],
+      }))
+
+      setLigandData({ atoms, bonds, proj2d })
+    }).catch(() => setLigandData(null))
+  }, [structureUrl, taskType])
+
+  if (taskType === 'enzyme' && ligandData) {
+    return <LigandSkeletonDiagram ligandData={ligandData} interactions={interactions} onResidueFocus={onResidueFocus} />
+  }
+
+  if (taskType === 'antibody' && abChains?.length) {
+    return <ProteinProteinDiagram interactions={interactions} abChains={abChains} cdrMap={cdrMap} onResidueFocus={onResidueFocus} />
+  }
+
+  return <RadialDiagram interactions={interactions} taskType={taskType} onResidueFocus={onResidueFocus} />
+}
+
+// ── Bipartite diagram for antibody–antigen interactions (atom-level) ──
+function ProteinProteinDiagram({ interactions, abChains, cdrMap, onResidueFocus }) {
+  const abSet = useMemo(() => new Set(abChains || []), [abChains])
+  const [selectedKey, setSelectedKey] = useState(null)
+
+  const { atomEdges, abResidues, agResidues } = useMemo(() => {
+    if (!interactions) return { atomEdges: [], abResidues: [], agResidues: [] }
+    const edges = []
+
+    const norm = (s1, s2, type, dist) =>
+      abSet.has(s1.chain) ? { ab: s1, ag: s2, type, dist } : { ab: s2, ag: s1, type, dist }
+
+    for (const b of interactions.hBonds ?? [])
+      edges.push(norm(
+        { chain: b.donorChain, pos: b.donorPosition, res: b.donorResidue, atom: b.donorAtom },
+        { chain: b.acceptorChain, pos: b.acceptorPosition, res: b.acceptorResidue, atom: b.acceptorAtom },
+        'hBond', b.distance))
+    for (const b of interactions.piPiStacks ?? [])
+      edges.push(norm(
+        { chain: b.chain1, pos: b.position1, res: b.residue1, atom: 'ring' },
+        { chain: b.chain2, pos: b.position2, res: b.residue2, atom: 'ring' },
+        'piPi', b.distance))
+    for (const b of interactions.piCations ?? [])
+      edges.push(norm(
+        { chain: b.ringChain, pos: b.ringPosition, res: b.ringResidue, atom: 'ring' },
+        { chain: b.cationChain, pos: b.cationPosition, res: b.cationResidue, atom: b.cationAtom },
+        'piCation', b.distance))
+    for (const b of interactions.saltBridges ?? [])
+      edges.push(norm(
+        { chain: b.chain1, pos: b.position1, res: b.residue1, atom: b.atom1 },
+        { chain: b.chain2, pos: b.position2, res: b.residue2, atom: b.atom2 },
+        'saltBridge', b.distance))
+    for (const b of interactions.hydrophobics ?? [])
+      edges.push(norm(
+        { chain: b.chain1, pos: b.position1, res: b.residue1, atom: b.atom1 },
+        { chain: b.chain2, pos: b.position2, res: b.residue2, atom: b.atom2 },
+        'hydrophobic', b.distance))
+
+    const abMap = new Map(), agMap = new Map()
+    for (const e of edges) {
+      const abk = `${e.ab.chain}:${e.ab.pos}`
+      if (!abMap.has(abk)) abMap.set(abk, { chain: e.ab.chain, pos: e.ab.pos, res: e.ab.res, types: new Set() })
+      abMap.get(abk).types.add(e.type)
+      const agk = `${e.ag.chain}:${e.ag.pos}`
+      if (!agMap.has(agk)) agMap.set(agk, { chain: e.ag.chain, pos: e.ag.pos, res: e.ag.res, types: new Set() })
+      agMap.get(agk).types.add(e.type)
+    }
+    const sortByPos = (a, b) => a.chain < b.chain ? -1 : a.chain > b.chain ? 1 : a.pos - b.pos
+    return { atomEdges: edges, abResidues: [...abMap.values()].sort(sortByPos), agResidues: [...agMap.values()].sort(sortByPos) }
+  }, [interactions, abSet])
+
+  const W = 480, nodeR = 18, nodeGap = 50, topPad = 35
+  const maxN = Math.max(abResidues.length, agResidues.length, 1)
+  const H = Math.max(280, topPad + maxN * nodeGap + 30)
+  const leftX = 85, rightX = W - 85
+
+  const nodePos = useMemo(() => {
+    const pos = new Map()
+    const layOut = (arr, x, prefix) => {
+      const startY = topPad + (H - topPad - 30 - arr.length * nodeGap) / 2 + nodeGap / 2
+      arr.forEach((r, i) => pos.set(`${prefix}:${r.chain}:${r.pos}`, { x, y: startY + i * nodeGap }))
+    }
+    layOut(abResidues, leftX, 'ab')
+    layOut(agResidues, rightX, 'ag')
+    return pos
+  }, [abResidues, agResidues, H])
+
+  const edgeGroups = useMemo(() => {
+    const groups = new Map()
+    for (const e of atomEdges) {
+      const key = `${e.ab.chain}:${e.ab.pos}-${e.ag.chain}:${e.ag.pos}`
+      if (!groups.has(key)) groups.set(key, [])
+      groups.get(key).push(e)
+    }
+    return groups
+  }, [atomEdges])
+
+  const activeTypes = useMemo(() => {
+    const s = new Set()
+    for (const e of atomEdges) s.add(e.type)
+    return [...s]
+  }, [atomEdges])
+
+  const connectedKeys = useMemo(() => {
+    if (!selectedKey) return null
+    const keys = new Set([selectedKey])
+    for (const e of atomEdges) {
+      const abk = `${e.ab.chain}:${e.ab.pos}`, agk = `${e.ag.chain}:${e.ag.pos}`
+      if (abk === selectedKey) keys.add(agk)
+      if (agk === selectedKey) keys.add(abk)
+    }
+    return keys
+  }, [selectedKey, atomEdges])
+
+  const handleNodeClick = (chain, pos, res) => {
+    const k = `${chain}:${pos}`
+    setSelectedKey(prev => prev === k ? null : k)
+    onResidueFocus(chain, pos, res)
+  }
+
+  if (!abResidues.length && !agResidues.length) return <div className="rp-ix-2d-empty">No interactions detected</div>
+
+  return (
+    <div className="rp-ix-2d-container">
+      <svg viewBox={`0 0 ${W} ${H}`} className="rp-ix-2d-svg">
+        <text x={leftX} y={16} textAnchor="middle" fill="#888" fontSize="11" fontWeight="bold">Antibody</text>
+        <text x={rightX} y={16} textAnchor="middle" fill="#888" fontSize="11" fontWeight="bold">Antigen</text>
+
+        {[...edgeGroups.entries()].map(([pairKey, group]) => {
+          const first = group[0]
+          const from = nodePos.get(`ab:${first.ab.chain}:${first.ab.pos}`)
+          const to = nodePos.get(`ag:${first.ag.chain}:${first.ag.pos}`)
+          if (!from || !to) return null
+          const abk = `${first.ab.chain}:${first.ab.pos}`, agk = `${first.ag.chain}:${first.ag.pos}`
+          const edgeActive = !connectedKeys || connectedKeys.has(abk) && connectedKeys.has(agk)
+          const fanSpread = 6
+          const offset = group.length > 1 ? -(group.length - 1) * fanSpread / 2 : 0
+          return group.map((e, i) => {
+            const dy = offset + i * fanSpread
+            const x1 = from.x + nodeR + 2, y1 = from.y + dy
+            const x2 = to.x - nodeR - 2, y2 = to.y + dy
+            const mx = (x1 + x2) / 2, my = (y1 + y2) / 2
+            return (
+              <g key={`${pairKey}-${i}`} opacity={edgeActive ? 1 : 0.15}>
+                <line x1={x1} y1={y1} x2={x2} y2={y2}
+                  stroke={IX_TYPE_COLORS[e.type]} strokeWidth="1.2" strokeDasharray="5 3" opacity="0.7" />
+                <text x={x1 + 4} y={y1 - 4} fill={IX_TYPE_COLORS[e.type]} fontSize="7" fontWeight="bold">{e.ab.atom}</text>
+                <text x={x2 - 4} y={y2 - 4} fill={IX_TYPE_COLORS[e.type]} fontSize="7" fontWeight="bold" textAnchor="end">{e.ag.atom}</text>
+                <text x={mx} y={my - 4} textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="6.5">{e.dist}Å</text>
+              </g>
+            )
+          })
+        })}
+
+        {abResidues.map(r => {
+          const nk = `ab:${r.chain}:${r.pos}`
+          const rk = `${r.chain}:${r.pos}`
+          const p = nodePos.get(nk)
+          if (!p) return null
+          const prop = RESIDUE_PROPERTY[r.res] ?? 'special'
+          const color = RESIDUE_PROPERTY_COLORS[prop]
+          const cdr = cdrMap?.get(rk) ?? null
+          const active = !connectedKeys || connectedKeys.has(rk)
+          return (
+            <g key={nk} style={{ cursor: 'pointer' }} opacity={active ? 1 : 0.3}
+              onClick={() => handleNodeClick(r.chain, r.pos, r.res)}>
+              <circle cx={p.x} cy={p.y} r={nodeR} fill={color} opacity="0.85" />
+              <text x={p.x} y={p.y - 4} textAnchor="middle" dominantBaseline="central" fill="#fff" fontSize="9" fontWeight="bold">{r.res}</text>
+              <text x={p.x} y={p.y + 8} textAnchor="middle" dominantBaseline="central" fill="rgba(255,255,255,0.7)" fontSize="7">{rk}</text>
+              {cdr && <text x={p.x - nodeR - 4} y={p.y} textAnchor="end" dominantBaseline="central" fill="#666" fontSize="7">{cdr}</text>}
+            </g>
+          )
+        })}
+
+        {agResidues.map(r => {
+          const nk = `ag:${r.chain}:${r.pos}`
+          const rk = `${r.chain}:${r.pos}`
+          const p = nodePos.get(nk)
+          if (!p) return null
+          const prop = RESIDUE_PROPERTY[r.res] ?? 'special'
+          const color = RESIDUE_PROPERTY_COLORS[prop]
+          const active = !connectedKeys || connectedKeys.has(rk)
+          return (
+            <g key={nk} style={{ cursor: 'pointer' }} opacity={active ? 1 : 0.3}
+              onClick={() => handleNodeClick(r.chain, r.pos, r.res)}>
+              <circle cx={p.x} cy={p.y} r={nodeR} fill={color} opacity="0.85" />
+              <text x={p.x} y={p.y - 4} textAnchor="middle" dominantBaseline="central" fill="#fff" fontSize="9" fontWeight="bold">{r.res}</text>
+              <text x={p.x} y={p.y + 8} textAnchor="middle" dominantBaseline="central" fill="rgba(255,255,255,0.7)" fontSize="7">{rk}</text>
+            </g>
+          )
+        })}
+      </svg>
+
+      <div className="rp-ix-2d-legend">
+        <div className="rp-ix-2d-legend-group">
+          {activeTypes.map(t => (
+            <span key={t} className="rp-ix-2d-legend-item">
+              <span style={{ width: 14, height: 2, background: IX_TYPE_COLORS[t], display: 'inline-block', borderRadius: 1 }} />
+              <span>{IX_TYPE_LABELS[t]}</span>
+            </span>
+          ))}
+        </div>
+        <div className="rp-ix-2d-legend-group">
+          {Object.entries(RESIDUE_PROPERTY_COLORS).map(([k, c]) => (
+            <span key={k} className="rp-ix-2d-legend-item">
+              <span style={{ width: 8, height: 8, background: c, borderRadius: '50%', display: 'inline-block' }} />
+              <span>{k}</span>
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function LigandSkeletonDiagram({ ligandData, interactions, onResidueFocus }) {
+  const { atoms, bonds, proj2d } = ligandData
+  const [selectedKey, setSelectedKey] = useState(null)
+
+  const ELEMENT_COLORS = { C: '#888', N: '#4488ff', O: '#ff4444', S: '#ffcc00', P: '#ff8800', F: '#33cc33', Cl: '#33cc33', Br: '#993300' }
+
+  const interactingResidues = useMemo(() => {
+    if (!interactions) return []
+    const map = new Map()
+    const addRes = (chain, pos, res, type, dist) => {
+      const key = `${chain}:${pos}`
+      if (!map.has(key)) map.set(key, { chain, pos, res, types: [], minDist: Infinity })
+      const entry = map.get(key)
+      if (!entry.types.includes(type)) entry.types.push(type)
+      entry.minDist = Math.min(entry.minDist, dist)
+    }
+    for (const b of interactions.hBonds ?? []) { addRes(b.acceptorChain, b.acceptorPosition, b.acceptorResidue, 'hBond', b.distance) }
+    for (const b of interactions.piPiStacks ?? []) { addRes(b.chain2, b.position2, b.residue2, 'piPi', b.distance) }
+    for (const b of interactions.piCations ?? []) { addRes(b.cationChain, b.cationPosition, b.cationResidue, 'piCation', b.distance) }
+    for (const b of interactions.saltBridges ?? []) { addRes(b.chain2, b.position2, b.residue2, 'saltBridge', b.distance) }
+    for (const b of interactions.hydrophobics ?? []) { addRes(b.chain2, b.position2, b.residue2, 'hydrophobic', b.distance) }
+    return [...map.values()]
+  }, [interactions])
+
+  const ligAtomIxMap = useMemo(() => {
+    if (!interactions) return new Map()
+    const map = new Map()
+    const add = (atomName, chain, pos, type) => {
+      if (!map.has(atomName)) map.set(atomName, [])
+      map.get(atomName).push({ target: `${chain}:${pos}`, type })
+    }
+    for (const b of interactions.hBonds ?? []) add(b.donorAtom, b.acceptorChain, b.acceptorPosition, 'hBond')
+    for (const b of interactions.saltBridges ?? []) add(b.atom1, b.chain2, b.position2, 'saltBridge')
+    for (const b of interactions.hydrophobics ?? []) add(b.atom1, b.chain2, b.position2, 'hydrophobic')
+    return map
+  }, [interactions])
+
+  const W = 460, H = 400
+  const padding = 60
+
+  const layout = useMemo(() => {
+    if (!proj2d.length) return { ligScale: 1, ligOffX: 0, ligOffY: 0, resPositions: new Map() }
+
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity
+    for (const p of proj2d) {
+      minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x)
+      minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y)
+    }
+    const rangeX = maxX - minX || 1, rangeY = maxY - minY || 1
+    const ligW = W * 0.45, ligH = H * 0.45
+    const scale = Math.min(ligW / rangeX, ligH / rangeY)
+    const offX = W / 2 - ((minX + maxX) / 2) * scale
+    const offY = H / 2 - ((minY + maxY) / 2) * scale
+
+    const resCount = interactingResidues.length
+    const resPositions = new Map()
+    const radius = Math.min(W, H) / 2 - 30
+    interactingResidues.forEach((r, i) => {
+      const angle = -Math.PI / 2 + (2 * Math.PI * i) / resCount
+      resPositions.set(`${r.chain}:${r.pos}`, {
+        x: W / 2 + radius * Math.cos(angle),
+        y: H / 2 + radius * Math.sin(angle),
+      })
+    })
+
+    return { ligScale: scale, ligOffX: offX, ligOffY: offY, resPositions }
+  }, [proj2d, interactingResidues, W, H])
+
+  const { ligScale, ligOffX, ligOffY, resPositions } = layout
+
+  const ligAtomScreenPos = (idx) => ({
+    x: proj2d[idx].x * ligScale + ligOffX,
+    y: proj2d[idx].y * ligScale + ligOffY,
+  })
+
+  const activeTypes = useMemo(() => {
+    const s = new Set()
+    for (const r of interactingResidues) for (const t of r.types) s.add(t)
+    return [...s]
+  }, [interactingResidues])
+
+  const connectedAtoms = useMemo(() => {
+    if (!selectedKey) return null
+    const atomNames = new Set()
+    for (const [name, targets] of ligAtomIxMap) {
+      if (targets.some(t => t.target === selectedKey)) atomNames.add(name)
+    }
+    return atomNames
+  }, [selectedKey, ligAtomIxMap])
+
+  const handleResClick = (chain, pos, res) => {
+    const k = `${chain}:${pos}`
+    setSelectedKey(prev => prev === k ? null : k)
+    onResidueFocus(chain, pos, res)
+  }
+
+  return (
+    <div className="rp-ix-2d-container">
+      <svg viewBox={`0 0 ${W} ${H}`} className="rp-ix-2d-svg">
+        {/* Interaction lines: ligand atom → residue */}
+        {atoms.map((a, idx) => {
+          const ixList = ligAtomIxMap.get(a.atomName)
+          if (!ixList) return null
+          const from = ligAtomScreenPos(idx)
+          return ixList.map((ix, j) => {
+            const to = resPositions.get(ix.target)
+            if (!to) return null
+            const active = !selectedKey || ix.target === selectedKey
+            return <line key={`ix-${idx}-${j}`} x1={from.x} y1={from.y} x2={to.x} y2={to.y}
+              stroke={IX_TYPE_COLORS[ix.type]} strokeWidth="1.2" strokeDasharray="5 3" opacity={active ? 0.7 : 0.1} />
+          })
+        })}
+
+        {/* Ligand bonds */}
+        {bonds.map(([i, j], idx) => {
+          const a = ligAtomScreenPos(i), b = ligAtomScreenPos(j)
+          return <line key={`bond-${idx}`} x1={a.x} y1={a.y} x2={b.x} y2={b.y}
+            stroke="#666" strokeWidth="1.5" />
+        })}
+
+        {/* Ligand atoms */}
+        {atoms.map((a, idx) => {
+          const p = ligAtomScreenPos(idx)
+          const color = ELEMENT_COLORS[a.element] || '#aaa'
+          const active = !selectedKey || (connectedAtoms && connectedAtoms.has(a.atomName))
+          if (a.element === 'C') {
+            return <circle key={`atom-${idx}`} cx={p.x} cy={p.y} r={2.5} fill={color} opacity={active ? 1 : 0.3} />
+          }
+          return (
+            <g key={`atom-${idx}`} opacity={active ? 1 : 0.3}>
+              <circle cx={p.x} cy={p.y} r={8} fill="#161616" />
+              <text x={p.x} y={p.y + 1} textAnchor="middle" dominantBaseline="central"
+                fill={color} fontSize="9" fontWeight="bold">{a.element}</text>
+            </g>
+          )
+        })}
+
+        {/* Protein residue nodes */}
+        {interactingResidues.map(r => {
+          const key = `${r.chain}:${r.pos}`
+          const p = resPositions.get(key)
+          if (!p) return null
+          const prop = RESIDUE_PROPERTY[r.res] ?? 'special'
+          const color = RESIDUE_PROPERTY_COLORS[prop]
+          const active = !selectedKey || key === selectedKey
+          return (
+            <g key={key} style={{ cursor: 'pointer' }} opacity={active ? 1 : 0.3}
+              onClick={() => handleResClick(r.chain, r.pos, r.res)}>
+              <circle cx={p.x} cy={p.y} r={18} fill={color} opacity="0.85" />
+              <text x={p.x} y={p.y - 4} textAnchor="middle" dominantBaseline="central"
+                fill="#fff" fontSize="9" fontWeight="bold">{r.res}</text>
+              <text x={p.x} y={p.y + 8} textAnchor="middle" dominantBaseline="central"
+                fill="rgba(255,255,255,0.7)" fontSize="7.5">{r.chain}:{r.pos}</text>
+            </g>
+          )
+        })}
+      </svg>
+
+      <div className="rp-ix-2d-legend">
+        <div className="rp-ix-2d-legend-group">
+          {activeTypes.map(t => (
+            <span key={t} className="rp-ix-2d-legend-item">
+              <span style={{ width: 14, height: 2, background: IX_TYPE_COLORS[t], display: 'inline-block', borderRadius: 1 }} />
+              <span>{IX_TYPE_LABELS[t]}</span>
+            </span>
+          ))}
+        </div>
+        <div className="rp-ix-2d-legend-group">
+          {Object.entries(RESIDUE_PROPERTY_COLORS).map(([k, c]) => (
+            <span key={k} className="rp-ix-2d-legend-item">
+              <span style={{ width: 8, height: 8, background: c, borderRadius: '50%', display: 'inline-block' }} />
+              <span>{k}</span>
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Radial diagram (fallback for antibody / no ligand) ──────────────
+function RadialDiagram({ interactions, taskType, onResidueFocus }) {
+  const residueMap = useMemo(() => {
+    if (!interactions) return new Map()
+    const map = new Map()
+
+    const addResidue = (chain, pos, res, type) => {
+      const key = `${chain}:${pos}`
+      if (!map.has(key)) map.set(key, { chain, pos, res, types: new Set() })
+      map.get(key).types.add(type)
+    }
+
+    const isLigand = (chain) => taskType === 'enzyme' && chain !== 'A'
+
+    for (const b of interactions.hBonds ?? []) {
+      if (isLigand(b.donorChain)) addResidue(b.acceptorChain, b.acceptorPosition, b.acceptorResidue, 'hBond')
+      else if (isLigand(b.acceptorChain)) addResidue(b.donorChain, b.donorPosition, b.donorResidue, 'hBond')
+      else { addResidue(b.donorChain, b.donorPosition, b.donorResidue, 'hBond'); addResidue(b.acceptorChain, b.acceptorPosition, b.acceptorResidue, 'hBond') }
+    }
+    for (const b of interactions.piPiStacks ?? []) {
+      addResidue(b.chain1, b.position1, b.residue1, 'piPi')
+      addResidue(b.chain2, b.position2, b.residue2, 'piPi')
+    }
+    for (const b of interactions.piCations ?? []) {
+      addResidue(b.ringChain, b.ringPosition, b.ringResidue, 'piCation')
+      addResidue(b.cationChain, b.cationPosition, b.cationResidue, 'piCation')
+    }
+    for (const b of interactions.saltBridges ?? []) {
+      addResidue(b.chain1, b.position1, b.residue1, 'saltBridge')
+      addResidue(b.chain2, b.position2, b.residue2, 'saltBridge')
+    }
+    for (const b of interactions.hydrophobics ?? []) {
+      addResidue(b.chain1, b.position1, b.residue1, 'hydrophobic')
+      addResidue(b.chain2, b.position2, b.residue2, 'hydrophobic')
+    }
+
+    return map
+  }, [interactions, taskType])
+
+  const edges = useMemo(() => {
+    if (!interactions) return []
+    const result = []
+    const isLigand = (chain) => taskType === 'enzyme' && chain !== 'A'
+
+    const addEdge = (type, c1, p1, c2, p2, dist) => {
+      const from = isLigand(c1) ? 'ligand' : `${c1}:${p1}`
+      const to = isLigand(c2) ? 'ligand' : `${c2}:${p2}`
+      if (from === to) return
+      result.push({ type, from, to, distance: dist })
+    }
+
+    for (const b of interactions.hBonds ?? []) addEdge('hBond', b.donorChain, b.donorPosition, b.acceptorChain, b.acceptorPosition, b.distance)
+    for (const b of interactions.piPiStacks ?? []) addEdge('piPi', b.chain1, b.position1, b.chain2, b.position2, b.distance)
+    for (const b of interactions.piCations ?? []) addEdge('piCation', b.ringChain, b.ringPosition, b.cationChain, b.cationPosition, b.distance)
+    for (const b of interactions.saltBridges ?? []) addEdge('saltBridge', b.chain1, b.position1, b.chain2, b.position2, b.distance)
+    for (const b of interactions.hydrophobics ?? []) addEdge('hydrophobic', b.chain1, b.position1, b.chain2, b.position2, b.distance)
+
+    const seen = new Set()
+    return result.filter(e => {
+      const key = [e.from, e.to, e.type].sort().join('|')
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+  }, [interactions, taskType])
+
+  const hasLigand = taskType === 'enzyme'
+  const proteinResidues = useMemo(() => [...residueMap.values()].filter(r => !(taskType === 'enzyme' && r.chain !== 'A')), [residueMap, taskType])
+
+  const W = 460, H = 380
+  const cx = W / 2, cy = H / 2
+  const radius = Math.min(W, H) / 2 - 50
+
+  const nodePositions = useMemo(() => {
+    const pos = new Map()
+    if (hasLigand) pos.set('ligand', { x: cx, y: cy })
+
+    const nodes = proteinResidues
+    const count = nodes.length
+    if (!count) return pos
+
+    const startAngle = -Math.PI / 2
+    const centerNode = hasLigand ? { x: cx, y: cy } : null
+
+    nodes.forEach((r, i) => {
+      const angle = startAngle + (2 * Math.PI * i) / count
+      const rx = hasLigand ? radius : radius * 0.8
+      const ry = hasLigand ? radius : radius * 0.8
+      const ox = (centerNode?.x ?? cx) + rx * Math.cos(angle)
+      const oy = (centerNode?.y ?? cy) + ry * Math.sin(angle)
+      pos.set(`${r.chain}:${r.pos}`, { x: ox, y: oy })
+    })
+
+    return pos
+  }, [proteinResidues, hasLigand, cx, cy, radius])
+
+  const activeTypes = useMemo(() => {
+    const s = new Set()
+    for (const e of edges) s.add(e.type)
+    return [...s]
+  }, [edges])
+
+  if (!proteinResidues.length) return <div className="rp-ix-2d-empty">No interactions detected</div>
+
+  return (
+    <div className="rp-ix-2d-container">
+      <svg viewBox={`0 0 ${W} ${H}`} className="rp-ix-2d-svg">
+        {edges.map((e, i) => {
+          const from = nodePositions.get(e.from)
+          const to = nodePositions.get(e.to)
+          if (!from || !to) return null
+          return (
+            <line key={i}
+              x1={from.x} y1={from.y} x2={to.x} y2={to.y}
+              stroke={IX_TYPE_COLORS[e.type]} strokeWidth="1.5"
+              strokeDasharray="5 3" opacity="0.8"
+            />
+          )
+        })}
+
+        {hasLigand && (
+          <g>
+            <circle cx={cx} cy={cy} r={22} fill="#333" stroke="#888" strokeWidth="1.5" />
+            <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="central"
+              fill="#fff" fontSize="10" fontWeight="bold">LIG</text>
+          </g>
+        )}
+
+        {proteinResidues.map(r => {
+          const key = `${r.chain}:${r.pos}`
+          const p = nodePositions.get(key)
+          if (!p) return null
+          const prop = RESIDUE_PROPERTY[r.res] ?? 'special'
+          const color = RESIDUE_PROPERTY_COLORS[prop]
+          return (
+            <g key={key} style={{ cursor: 'pointer' }}
+              onClick={() => onResidueFocus(r.chain, r.pos, r.res)}>
+              <circle cx={p.x} cy={p.y} r={18} fill={color} opacity="0.85" />
+              <text x={p.x} y={p.y - 4} textAnchor="middle" dominantBaseline="central"
+                fill="#fff" fontSize="9" fontWeight="bold">{r.res}</text>
+              <text x={p.x} y={p.y + 8} textAnchor="middle" dominantBaseline="central"
+                fill="rgba(255,255,255,0.7)" fontSize="7.5">{r.chain}:{r.pos}</text>
+            </g>
+          )
+        })}
+      </svg>
+
+      <div className="rp-ix-2d-legend">
+        <div className="rp-ix-2d-legend-group">
+          {activeTypes.map(t => (
+            <span key={t} className="rp-ix-2d-legend-item">
+              <span style={{ width: 14, height: 2, background: IX_TYPE_COLORS[t], display: 'inline-block', borderRadius: 1 }} />
+              <span>{IX_TYPE_LABELS[t]}</span>
+            </span>
+          ))}
+        </div>
+        <div className="rp-ix-2d-legend-group">
+          {Object.entries(RESIDUE_PROPERTY_COLORS).map(([k, c]) => (
+            <span key={k} className="rp-ix-2d-legend-item">
+              <span style={{ width: 8, height: 8, background: c, borderRadius: '50%', display: 'inline-block' }} />
+              <span>{k}</span>
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function IxSection({ id, label, count, cutoff, open, toggle, children }) {
   const isOpen = open.has(id)
   return (
@@ -1300,6 +1996,7 @@ function HomologRow({ h, superimposeId, onSuperimpose }) {
     <div className={`rp-homolog-card ${isActive ? 'active' : ''}`}>
       <span className="rp-homolog-id">{h.pdbId}</span>
       <span className="rp-homolog-identity">{h.identity}%</span>
+      <span className="rp-homolog-xtal-tag">Crystal Structure</span>
       <div className="rp-homolog-actions">
         <button
           className={`rp-homolog-action-btn ${isActive ? 'active' : ''}`}
@@ -1333,17 +2030,26 @@ function buildResidueColorMap(groups) {
   return map
 }
 
-function SequenceBar({ entities, groups, focusedResidue, onResidueClick }) {
+const IX_LEGEND = {
+  hBond: { color: '#00cc66', label: 'H-Bond' },
+  piPi: { color: '#ff8800', label: 'π-π Stack' },
+  piCation: { color: '#ffcc00', label: 'π-Cation' },
+  saltBridge: { color: '#ff4444', label: 'Salt Bridge' },
+  hydrophobic: { color: '#bb88ff', label: 'Hydrophobic' },
+}
+
+function SequenceBar({ entities, groups, focusedResidues, onResidueClick }) {
   const BLOCK = 10
   const chains = entities.filter(e => e.sequence)
   const colorMap = useMemo(() => buildResidueColorMap(groups || []), [groups])
   const focusedRef = useRef(null)
+  const lastFocused = focusedResidues[focusedResidues.length - 1] ?? null
 
   useEffect(() => {
     if (focusedRef.current) {
       focusedRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     }
-  }, [focusedResidue])
+  }, [lastFocused])
 
   const uniqueGroups = useMemo(() => {
     if (!groups?.length) return []
@@ -1389,13 +2095,14 @@ function SequenceBar({ entities, groups, focusedResidue, onResidueClick }) {
                     {chars.split('').map((aa, j) => {
                       const seqId = start + j + 1
                       const color = colorMap.get(`${entity.chain}:${seqId}`)
-                      const isFocused = focusedResidue?.chain === entity.chain && focusedResidue?.seqId === seqId
+                      const isFocused = focusedResidues.some(fr => fr.chain === entity.chain && fr.seqId === seqId)
+                      const isLast = lastFocused?.chain === entity.chain && lastFocused?.seqId === seqId
                       return (
                         <span
                           key={j}
-                          ref={isFocused ? focusedRef : undefined}
+                          ref={isLast ? focusedRef : undefined}
                           className={`rp-seqbar-aa ${isFocused ? 'focused' : ''} ${color ? 'annotated' : ''}`}
-                          style={{ color: color || '#666' }}
+                          style={{ color: isFocused ? '#38b6ff' : (color || '#666') }}
                           title={`${entity.chain}${seqId} ${aa}`}
                           onClick={e => onResidueClick({ chain: entity.chain, seqId, resType: aa }, e)}
                         >

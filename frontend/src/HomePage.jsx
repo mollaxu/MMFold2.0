@@ -77,6 +77,77 @@ function formatTimeAgo(ts) {
   return new Date(ts).toLocaleDateString()
 }
 
+function parsePlainSequences(text) {
+  const blocks = text.trim().split(/\n\s*\n/).map(b => b.replace(/\s/g, '').toUpperCase()).filter(Boolean)
+  if (blocks.length === 0) throw new Error('No sequences found')
+  return blocks.map(seq => ({
+    uid: uidCounter++,
+    type: inferSequenceType(seq),
+    copies: 1,
+    sequence: seq,
+  }))
+}
+
+// ── QuickPaste ────────────────────────────────────────────────────
+
+function QuickPaste({ onParsed, onError, onClear }) {
+  const [value, setValue] = useState('')
+  const fastaRef = useRef(null)
+  const jsonRef = useRef(null)
+
+  const handleParse = () => {
+    const text = value.trim()
+    if (!text) return
+    try {
+      const parsed = text.includes('>') ? parseFasta(text) : parsePlainSequences(text)
+      onParsed(parsed)
+      setValue('')
+    } catch (err) {
+      onError(err.message)
+    }
+  }
+
+  const handleFile = (file) => {
+    if (!file) return
+    const ext = file.name.split('.').pop().toLowerCase()
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const parsed = ext === 'json' ? parseJson(e.target.result) : parseFasta(e.target.result)
+        const text = parsed.map(p => `>${p.type}_${p.uid}\n${p.sequence}`).join('\n\n')
+        setValue(text)
+        onParsed(parsed)
+      } catch (err) {
+        onError(err.message)
+      }
+    }
+    reader.readAsText(file)
+  }
+
+  return (
+    <div className="qp-wrap">
+      <textarea
+        className="qp-textarea"
+        placeholder={'>Chain_A\nMKTAYIAKQRQISFVKSHFS...\n\n>Chain_B\nDIQMTQSPSFLSASVGDRVT...\n\nPaste FASTA or plain sequences separated by blank lines'}
+        value={value}
+        onChange={e => setValue(e.target.value)}
+        onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleParse() }}
+      />
+      <div className="qp-actions">
+        <button className="qp-btn-parse" disabled={!value.trim()} onClick={handleParse}>Parse & Fill</button>
+        <div className="qp-btns">
+          <button className="qp-btn-secondary" onClick={() => fastaRef.current?.click()}>Import</button>
+          <button className="qp-btn-secondary" onClick={() => { setValue(''); onClear() }}>Clear</button>
+        </div>
+      </div>
+      <input ref={fastaRef} type="file" accept=".fasta,.fa,.txt" style={{ display: 'none' }}
+        onChange={e => { handleFile(e.target.files?.[0]); e.target.value = '' }} />
+      <input ref={jsonRef} type="file" accept=".json" style={{ display: 'none' }}
+        onChange={e => { handleFile(e.target.files?.[0]); e.target.value = '' }} />
+    </div>
+  )
+}
+
 // ── EntityCard ─────────────────────────────────────────────────────
 
 function EntityCard({ entityType, setEntityType, copies, setCopies, sequence, setSequence, canRemove, onRemove }) {
@@ -465,37 +536,14 @@ export default function HomePage({ onViewResult }) {
         {/* Top toolbar */}
         <div className="home-toolbar">
           <span className="home-quota">Remaining jobs today: <strong>30</strong></span>
-          <div className="home-toolbar-actions">
-            <ImportButton onParsed={handleParsed} onError={handleImportError} />
-            <button className="home-btn-outline" onClick={clearAll}>↺ Clear</button>
-          </div>
         </div>
 
         {/* Import feedback */}
         {importMsg && <div className="import-notice import-notice-success">✓ {importMsg}</div>}
         {importError && <div className="import-notice import-notice-error">✕ {importError}</div>}
 
-        {/* Entity cards */}
-        <div className="home-entities">
-          {entries.map(e => (
-            <EntityCard
-              key={e.uid}
-              entityType={e.type}
-              setEntityType={t => updateEntry(e.uid, { type: t })}
-              copies={e.copies}
-              setCopies={c => updateEntry(e.uid, { copies: c })}
-              sequence={e.sequence}
-              setSequence={s => updateEntry(e.uid, { sequence: s })}
-              canRemove={entries.length > 1}
-              onRemove={() => removeEntry(e.uid)}
-            />
-          ))}
-        </div>
-
-        {/* Add entity */}
-        <button className="home-add-entity" onClick={addEntry}>
-          + Add entity
-        </button>
+        {/* Quick paste */}
+        <QuickPaste onParsed={handleParsed} onError={handleImportError} onClear={clearAll} />
 
         {/* Submit row */}
         <div className="home-submit-row">

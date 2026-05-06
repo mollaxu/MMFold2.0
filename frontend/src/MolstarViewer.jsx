@@ -14,6 +14,7 @@ export default function MolstarViewer({
   onResidueClick,
   colorMode = 'plddt',
   autoFocusLigand = false,
+  interactions = null,
 }) {
   const parentRef = useRef(null)
   const pluginRef = useRef(null)
@@ -33,6 +34,8 @@ export default function MolstarViewer({
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [structureReady, setStructureReady] = useState(false)
+  const overlayRef = useRef(null)
+  const ixElementsRef = useRef([])
 
   // ── Init plugin + load structure ──────────────────────────────────
   useEffect(() => {
@@ -100,6 +103,7 @@ export default function MolstarViewer({
         const { StructureElement, StructureProperties: SP } = await import(
           'molstar/lib/commonjs/mol-model/structure'
         )
+        const { OrderedSet } = await import('molstar/lib/commonjs/mol-data/int')
         plugin.behaviors.interaction.click.subscribe(({ current }) => {
           if (!mounted || !onResidueClickRef.current) return
           const { loci } = current
@@ -110,15 +114,24 @@ export default function MolstarViewer({
           }
           const e = loci.elements[0]
           if (!e) { clickFromStructureRef.current = true; onResidueClickRef.current(null); return }
-          const loc = StructureElement.Location.create(loci.structure)
-          loc.unit = e.unit
-          loc.element = e.unit.elements[e.indices[0]]
-          clickFromStructureRef.current = true
-          onResidueClickRef.current({
-            chain: SP.chain.auth_asym_id(loc),
-            seqId: SP.residue.auth_seq_id(loc),
-            resType: SP.atom.auth_comp_id(loc),
-          })
+          try {
+            const loc = StructureElement.Location.create(loci.structure)
+            loc.unit = e.unit
+            loc.element = e.unit.elements[OrderedSet.getAt(e.indices, 0)]
+            const chain = String(SP.chain.auth_asym_id(loc))
+            const seqId = Number(SP.residue.auth_seq_id(loc))
+            const resType = String(SP.atom.auth_comp_id(loc))
+            if (!chain || !isFinite(seqId)) {
+              clickFromStructureRef.current = true
+              onResidueClickRef.current(null)
+              return
+            }
+            clickFromStructureRef.current = true
+            onResidueClickRef.current({ chain, seqId, resType })
+          } catch {
+            clickFromStructureRef.current = true
+            onResidueClickRef.current(null)
+          }
         })
 
         if (mounted) { setIsLoading(false); setStructureReady(true) }
@@ -214,6 +227,50 @@ export default function MolstarViewer({
     })()
   }, [structureReady, autoFocusLigand])
 
+  // ── Interaction overlay (colored lines + distance labels) ──────────
+  useEffect(() => {
+    if (!structureReady || !pluginRef.current || !interactions) {
+      clearInteractionOverlay(overlayRef, ixElementsRef)
+      return
+    }
+
+    const plugin = pluginRef.current
+
+    if (!focusedResidue) {
+      clearInteractionOverlay(overlayRef, ixElementsRef)
+      return
+    }
+
+    let cancelled = false
+    ;(async () => {
+      const ixItems = flattenInteractions(interactions, focusedResidue)
+      if (!ixItems.length || cancelled) { clearInteractionOverlay(overlayRef, ixElementsRef); return }
+
+      const coordsMap = await buildAtomCoordsMap(plugin, ixItems)
+      if (cancelled) return
+
+      const elements = createOverlayElements(overlayRef, ixItems, coordsMap)
+      ixElementsRef.current = elements
+      updateOverlayPositions(plugin, overlayRef, elements)
+    })()
+
+    let rafId = null
+    const tick = () => {
+      if (cancelled) return
+      if (ixElementsRef.current.length) {
+        updateOverlayPositions(pluginRef.current, overlayRef, ixElementsRef.current)
+      }
+      rafId = requestAnimationFrame(tick)
+    }
+    rafId = requestAnimationFrame(tick)
+
+    return () => {
+      cancelled = true
+      if (rafId) cancelAnimationFrame(rafId)
+      clearInteractionOverlay(overlayRef, ixElementsRef)
+    }
+  }, [structureReady, focusedResidue, interactions])
+
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       {isLoading && (
@@ -226,6 +283,15 @@ export default function MolstarViewer({
         </div>
       )}
       <div ref={parentRef} style={{ width: '100%', height: '100%' }} />
+      <svg
+        ref={overlayRef}
+        style={{
+          position: 'absolute', top: 0, left: 0,
+          width: '100%', height: '100%',
+          pointerEvents: 'none', zIndex: 1,
+          overflow: 'visible',
+        }}
+      />
     </div>
   )
 }
@@ -632,4 +698,260 @@ async function applyColoring(plugin, colorMode = 'plddt') {
   } catch (err) {
     console.warn('Coloring failed:', err)
   }
+}
+
+// ── Interaction overlay helpers ──────────────────────────────────────
+
+const IX_COLORS = {
+  hBond: '#00cc66',
+  piPi: '#ff8800',
+  piCation: '#ffcc00',
+  saltBridge: '#ff4444',
+  hydrophobic: '#bb88ff',
+}
+
+const IX_LABELS = {
+  hBond: 'H-Bond',
+  piPi: 'π-π',
+  piCation: 'π-Cat',
+  saltBridge: 'Salt',
+  hydrophobic: 'Hydro',
+}
+
+function flattenInteractions(interactions, focusedResidue, maxPerType = Infinity) {
+  const result = []
+  const match = (c, s) => !focusedResidue || (c === focusedResidue.chain && s === focusedResidue.seqId)
+
+  const push = (type, items, maxN) => {
+    let n = 0
+    for (const item of items) {
+      if (n >= maxN) break
+      result.push({ type, ...item })
+      n++
+    }
+  }
+
+  const hBonds = (interactions?.hBonds ?? [])
+    .filter(b => match(b.donorChain, b.donorPosition) || match(b.acceptorChain, b.acceptorPosition))
+    .map(b => ({
+      from: { chain: b.donorChain, resSeq: b.donorPosition, atom: b.donorAtom },
+      to: { chain: b.acceptorChain, resSeq: b.acceptorPosition, atom: b.acceptorAtom },
+      distance: b.distance,
+    }))
+  push('hBond', hBonds, maxPerType)
+
+  const saltBridges = (interactions?.saltBridges ?? [])
+    .filter(b => match(b.chain1, b.position1) || match(b.chain2, b.position2))
+    .map(b => ({
+      from: { chain: b.chain1, resSeq: b.position1, atom: b.atom1 },
+      to: { chain: b.chain2, resSeq: b.position2, atom: b.atom2 },
+      distance: b.distance,
+    }))
+  push('saltBridge', saltBridges, maxPerType)
+
+  const hydrophobics = (interactions?.hydrophobics ?? [])
+    .filter(b => match(b.chain1, b.position1) || match(b.chain2, b.position2))
+    .map(b => ({
+      from: { chain: b.chain1, resSeq: b.position1, atom: b.atom1 },
+      to: { chain: b.chain2, resSeq: b.position2, atom: b.atom2 },
+      distance: b.distance,
+    }))
+  push('hydrophobic', hydrophobics, maxPerType)
+
+  const piPiStacks = (interactions?.piPiStacks ?? [])
+    .filter(b => match(b.chain1, b.position1) || match(b.chain2, b.position2))
+    .map(b => ({
+      from: { chain: b.chain1, resSeq: b.position1, atom: 'CG' },
+      to: { chain: b.chain2, resSeq: b.position2, atom: 'CG' },
+      distance: b.distance,
+    }))
+  push('piPi', piPiStacks, maxPerType)
+
+  const piCations = (interactions?.piCations ?? [])
+    .filter(b => match(b.ringChain, b.ringPosition) || match(b.cationChain, b.cationPosition))
+    .map(b => ({
+      from: { chain: b.ringChain, resSeq: b.ringPosition, atom: 'CG' },
+      to: { chain: b.cationChain, resSeq: b.cationPosition, atom: b.cationAtom },
+      distance: b.distance,
+    }))
+  push('piCation', piCations, maxPerType)
+
+  return result
+}
+
+async function buildAtomCoordsMap(plugin, ixItems) {
+  const { StructureElement, StructureProperties: SP } = await import(
+    'molstar/lib/commonjs/mol-model/structure'
+  )
+  const structure = plugin.managers.structure.hierarchy.current.structures[0]?.cell.obj?.data
+  if (!structure) return new Map()
+
+  const needed = new Set()
+  for (const ix of ixItems) {
+    needed.add(`${ix.from.chain}:${ix.from.resSeq}:${ix.from.atom}`)
+    needed.add(`${ix.to.chain}:${ix.to.resSeq}:${ix.to.atom}`)
+  }
+
+  const coords = new Map()
+  const fallbacks = new Map()
+
+  for (const unit of structure.units) {
+    const { elements } = unit
+    const loc = StructureElement.Location.create(structure)
+    loc.unit = unit
+    for (let i = 0; i < elements.length; i++) {
+      loc.element = elements[i]
+      const c = String(SP.chain.auth_asym_id(loc))
+      const r = Number(SP.residue.auth_seq_id(loc))
+      const a = String(SP.atom.label_atom_id(loc))
+
+      const key = `${c}:${r}:${a}`
+      if (needed.has(key) && !coords.has(key)) {
+        coords.set(key, {
+          x: unit.conformation.x(elements[i]),
+          y: unit.conformation.y(elements[i]),
+          z: unit.conformation.z(elements[i]),
+        })
+      }
+
+      const resKey = `${c}:${r}`
+      if (!fallbacks.has(resKey)) {
+        fallbacks.set(resKey, {
+          x: unit.conformation.x(elements[i]),
+          y: unit.conformation.y(elements[i]),
+          z: unit.conformation.z(elements[i]),
+        })
+      }
+    }
+  }
+
+  for (const key of needed) {
+    if (!coords.has(key)) {
+      const parts = key.split(':')
+      const fb = fallbacks.get(`${parts[0]}:${parts[1]}`)
+      if (fb) coords.set(key, fb)
+    }
+  }
+
+  return coords
+}
+
+function worldToScreen(plugin, wx, wy, wz, sw, sh) {
+  const cam = plugin.canvas3d?.camera
+  if (!cam) return null
+
+  const v = cam.view
+  const p = cam.projection
+
+  const ex = v[0] * wx + v[4] * wy + v[8] * wz + v[12]
+  const ey = v[1] * wx + v[5] * wy + v[9] * wz + v[13]
+  const ez = v[2] * wx + v[6] * wy + v[10] * wz + v[14]
+  const ew = v[3] * wx + v[7] * wy + v[11] * wz + v[15]
+
+  const cx = p[0] * ex + p[4] * ey + p[8] * ez + p[12] * ew
+  const cy = p[1] * ex + p[5] * ey + p[9] * ez + p[13] * ew
+  const cw = p[3] * ex + p[7] * ey + p[11] * ez + p[15] * ew
+
+  if (cw <= 0.001) return null
+
+  return {
+    x: (cx / cw * 0.5 + 0.5) * sw,
+    y: (1 - (cy / cw * 0.5 + 0.5)) * sh,
+  }
+}
+
+function createOverlayElements(overlayRef, ixItems, coordsMap) {
+  const svg = overlayRef.current
+  if (!svg) return []
+
+  const elements = []
+  const NS = 'http://www.w3.org/2000/svg'
+
+  const makeText = (content, color, fontSize = '10') => {
+    const t = document.createElementNS(NS, 'text')
+    t.setAttribute('fill', color)
+    t.setAttribute('font-size', fontSize)
+    t.setAttribute('font-family', 'monospace')
+    t.setAttribute('text-anchor', 'middle')
+    t.setAttribute('paint-order', 'stroke')
+    t.setAttribute('stroke', '#000')
+    t.setAttribute('stroke-width', '3')
+    t.setAttribute('font-weight', 'bold')
+    t.textContent = content
+    svg.appendChild(t)
+    return t
+  }
+
+  for (const ix of ixItems) {
+    const fromKey = `${ix.from.chain}:${ix.from.resSeq}:${ix.from.atom}`
+    const toKey = `${ix.to.chain}:${ix.to.resSeq}:${ix.to.atom}`
+    const fromCoord = coordsMap.get(fromKey)
+    const toCoord = coordsMap.get(toKey)
+    if (!fromCoord || !toCoord) continue
+
+    const color = IX_COLORS[ix.type] || '#ffffff'
+
+    const line = document.createElementNS(NS, 'line')
+    line.setAttribute('stroke', color)
+    line.setAttribute('stroke-width', '1.5')
+    line.setAttribute('stroke-dasharray', '4 3')
+    line.setAttribute('opacity', '0.9')
+    svg.appendChild(line)
+
+    const distText = makeText(`${ix.distance.toFixed(1)}Å`, color, '10')
+    const fromText = makeText(ix.from.atom, '#e0e0e0', '9')
+    const toText = makeText(ix.to.atom, '#e0e0e0', '9')
+
+    elements.push({ line, distText, fromText, toText, fromCoord, toCoord })
+  }
+
+  return elements
+}
+
+function updateOverlayPositions(plugin, overlayRef, elements) {
+  const svg = overlayRef.current
+  if (!svg || !elements.length || !plugin?.canvas3d) return
+
+  const rect = svg.getBoundingClientRect()
+  if (!rect.width || !rect.height) return
+  svg.setAttribute('viewBox', `0 0 ${rect.width} ${rect.height}`)
+
+  for (const { line, distText, fromText, toText, fromCoord, toCoord } of elements) {
+    const p1 = worldToScreen(plugin, fromCoord.x, fromCoord.y, fromCoord.z, rect.width, rect.height)
+    const p2 = worldToScreen(plugin, toCoord.x, toCoord.y, toCoord.z, rect.width, rect.height)
+
+    if (!p1 || !p2) {
+      line.setAttribute('visibility', 'hidden')
+      distText.setAttribute('visibility', 'hidden')
+      fromText.setAttribute('visibility', 'hidden')
+      toText.setAttribute('visibility', 'hidden')
+      continue
+    }
+
+    line.setAttribute('visibility', 'visible')
+    line.setAttribute('x1', p1.x)
+    line.setAttribute('y1', p1.y)
+    line.setAttribute('x2', p2.x)
+    line.setAttribute('y2', p2.y)
+
+    distText.setAttribute('visibility', 'visible')
+    distText.setAttribute('x', (p1.x + p2.x) / 2)
+    distText.setAttribute('y', (p1.y + p2.y) / 2 - 6)
+
+    fromText.setAttribute('visibility', 'visible')
+    fromText.setAttribute('x', p1.x)
+    fromText.setAttribute('y', p1.y - 8)
+
+    toText.setAttribute('visibility', 'visible')
+    toText.setAttribute('x', p2.x)
+    toText.setAttribute('y', p2.y - 8)
+  }
+}
+
+function clearInteractionOverlay(overlayRef, ixElementsRef) {
+  const svg = overlayRef.current
+  if (svg) {
+    while (svg.firstChild) svg.removeChild(svg.firstChild)
+  }
+  if (ixElementsRef) ixElementsRef.current = []
 }
