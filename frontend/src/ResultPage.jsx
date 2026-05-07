@@ -205,7 +205,7 @@ export default function ResultPage({ task, onBack }) {
   // Click residue: toggle in/out of multi-selection
   const handleResidueClick = (residue, e) => {
     e?.stopPropagation?.()
-    if (!residue) { setFocusedResidues([]); return }
+    if (!residue) { setFocusedResidues([]); setSelectedGroupIds(new Set()); setHoveredIxResidue(null); return }
     setFocusedResidues(prev => {
       const idx = prev.findIndex(r => r.chain === residue.chain && r.seqId === residue.seqId)
       return idx >= 0 ? prev.filter((_, i) => i !== idx) : [...prev, residue]
@@ -307,75 +307,69 @@ export default function ResultPage({ task, onBack }) {
 
           {/* LEFT: sticky 3D viewer + legend */}
           <div className="rp-left-col">
-            <div className="rp-viewer-toolbar">
-              <div className="rp-color-toggle">
-                <button
-                  className={`rp-color-btn ${colorMode === 'plddt' ? 'active' : ''}`}
-                  onClick={() => setColorMode('plddt')}
-                >
-                  pLDDT
-                </button>
-                <button
-                  className={`rp-color-btn ${colorMode === 'electrostatic' ? 'active' : ''}`}
-                  onClick={() => setColorMode('electrostatic')}
-                >
-                  Electrostatic
-                </button>
-              </div>
-              <div className="rp-repr-toggle">
-                <button
-                  className={`rp-repr-btn ${reprMode === 'cartoon' ? 'active' : ''}`}
-                  onClick={() => setReprMode('cartoon')}
-                >
-                  Cartoon
-                </button>
-                <button
-                  className={`rp-repr-btn ${reprMode === 'surface' ? 'active' : ''}`}
-                  onClick={() => setReprMode('surface')}
-                >
-                  Surface
-                </button>
-              </div>
-            </div>
-            {focusedIxTypes ? (
-              <div className="rp-ix-legend">
-                {focusedIxTypes.map(t => (
-                  <span key={t} className="rp-ix-legend-item">
-                    <span className="rp-ix-legend-dot" style={{ background: IX_LEGEND[t]?.color }} />
-                    {IX_LEGEND[t]?.label}
-                  </span>
-                ))}
-              </div>
-            ) : colorMode === 'plddt' ? (
-              <div className="rp-plddt-legend">
-                <div className="rp-plddt-item">
-                  <span>Very high (pLDDT &gt; 90)</span>
-                  <div className="rp-plddt-bar" style={{ background: '#0066cc' }} />
-                </div>
-                <div className="rp-plddt-item">
-                  <span>Confident (70–90)</span>
-                  <div className="rp-plddt-bar" style={{ background: '#4dd8e8' }} />
-                </div>
-                <div className="rp-plddt-item">
-                  <span>Low (50–70)</span>
-                  <div className="rp-plddt-bar" style={{ background: '#ffdd57' }} />
-                </div>
-                <div className="rp-plddt-item">
-                  <span>Very low (&lt; 50)</span>
-                  <div className="rp-plddt-bar" style={{ background: 'linear-gradient(to right, #ff9933, #ff6600)' }} />
-                </div>
-              </div>
-            ) : colorMode === 'electrostatic' ? (
-              <div className="rp-electro-legend">
-                <div className="rp-electro-labels">
-                  <span>Negative (−)</span>
-                  <span>Neutral</span>
-                  <span>Positive (+)</span>
-                </div>
-                <div className="rp-electro-bar" />
-              </div>
-            ) : null}
             <div className="rp-viewer-card" style={{ flex: 1, minHeight: 0 }}>
+              <div className="rp-viewer-toolbar">
+                <div className="rp-toolbar-half">
+                  <div className="rp-repr-toggle">
+                    <button
+                      className={`rp-repr-btn ${reprMode === 'surface' ? 'active' : ''}`}
+                      onClick={() => setReprMode('surface')}
+                    >Surface</button>
+                    <button
+                      className={`rp-repr-btn ${reprMode === 'cartoon' ? 'active' : ''}`}
+                      onClick={() => setReprMode('cartoon')}
+                    >Cartoon</button>
+                  </div>
+                  <div className="rp-color-toggle">
+                    <button
+                      className={`rp-color-btn ${colorMode === 'plddt' ? 'active' : ''}`}
+                      onClick={() => setColorMode('plddt')}
+                    >pLDDT</button>
+                    <button
+                      className={`rp-color-btn ${colorMode === 'electrostatic' ? 'active' : ''}`}
+                      onClick={() => setColorMode('electrostatic')}
+                    >Electrostatic</button>
+                  </div>
+                </div>
+                {focusedIxTypes ? (
+                  <div className="rp-ix-legend">
+                    {focusedIxTypes.map(t => (
+                      <span key={t} className="rp-ix-legend-item">
+                        <span className="rp-ix-legend-dot" style={{ background: IX_LEGEND[t]?.color }} />
+                        {IX_LEGEND[t]?.label}
+                      </span>
+                    ))}
+                  </div>
+                ) : colorMode === 'plddt' ? (
+                  <div className="rp-plddt-legend">
+                    <div className="rp-plddt-item">
+                      <span className="rp-plddt-label">&gt;90</span>
+                      <div className="rp-plddt-bar" style={{ background: '#0066cc' }} />
+                    </div>
+                    <div className="rp-plddt-item">
+                      <span className="rp-plddt-label">70–90</span>
+                      <div className="rp-plddt-bar" style={{ background: '#4dd8e8' }} />
+                    </div>
+                    <div className="rp-plddt-item">
+                      <span className="rp-plddt-label">50–70</span>
+                      <div className="rp-plddt-bar" style={{ background: '#ffdd57' }} />
+                    </div>
+                    <div className="rp-plddt-item">
+                      <span className="rp-plddt-label">&lt;50</span>
+                      <div className="rp-plddt-bar" style={{ background: 'linear-gradient(to right, #ff9933, #ff6600)' }} />
+                    </div>
+                  </div>
+                ) : colorMode === 'electrostatic' ? (
+                  <div className="rp-electro-legend">
+                    <div className="rp-electro-labels">
+                      <span>Negative (−)</span>
+                      <span>Neutral</span>
+                      <span>Positive (+)</span>
+                    </div>
+                    <div className="rp-electro-bar" />
+                  </div>
+                ) : null}
+              </div>
               <MolstarViewer
                 structureUrl={structureUrl}
                 highlightedResidues={highlightedResidues}
@@ -401,6 +395,123 @@ export default function ResultPage({ task, onBack }) {
 
           {/* RIGHT: scrollable panels */}
           <div className="rp-right-col">
+
+            {/* Annotations card */}
+            <div className="rp-anno-panel">
+              <div className="rp-anno-header">
+                <span className="rp-anno-title">Annotations</span>
+              </div>
+              {taskType === 'antibody' && annotations?.schemes && (
+                <div className="rp-scheme-tabs">
+                  {NUMBERING_SCHEMES.map(s => (
+                    <button
+                      key={s}
+                      className={`rp-scheme-tab ${activeScheme === s ? 'active' : ''}`}
+                      onClick={() => { setActiveScheme(s); setHoveredGroupId(null); setFocusedResidue(null); setSelectedGroupIds(new Set()) }}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                  {selectedGroupIds.size > 0 && (
+                    <button className="rp-scheme-clear" onClick={clearSelections}>
+                      Clear ({selectedGroupIds.size})
+                    </button>
+                  )}
+                </div>
+              )}
+              {!annotations ? (
+                <div className="rp-anno-loading">Loading annotations...</div>
+              ) : (
+                <div className="rp-anno-list">
+                  {activeGroups.map(group => {
+                    const isSelected = selectedGroupIds.has(group.id)
+                    return (
+                      <div
+                        key={group.id}
+                        className={`rp-anno-item ${hoveredGroupId === group.id ? 'hovered' : ''} ${isSelected ? 'selected' : ''}`}
+                        style={{ '--group-color': group.color }}
+                        onMouseEnter={() => setHoveredGroupId(group.id)}
+                        onMouseLeave={() => setHoveredGroupId(null)}
+                      >
+                        <div
+                          className="rp-anno-item-header clickable"
+                          onClick={() => toggleGroupSelection(group.id)}
+                        >
+                          <div className="rp-anno-info">
+                            <div className="rp-anno-label-row">
+                              <div className="rp-anno-dot" style={{ background: group.color }} />
+                              <span className="rp-anno-label">{group.label}</span>
+                            </div>
+                            <span className="rp-anno-residues">{group.residues.length} residues</span>
+                          </div>
+                          <span className={`rp-anno-pin ${isSelected ? 'pinned' : ''}`} style={{ color: isSelected ? group.color : undefined }}>
+                            {isSelected ? '◉' : '○'}
+                          </span>
+                        </div>
+                        <div className="rp-anno-tags">
+                          {group.residues.map(r => {
+                            const isFocused = focusedResidues.some(fr => fr.chain === r.chain && fr.seqId === r.seqId)
+                            return (
+                              <span
+                                key={`${r.chain}${r.seqId}`}
+                                className={`rp-anno-tag ${isFocused ? 'focused' : ''}`}
+                                style={{ '--tag-color': group.color }}
+                                onClick={e => handleResidueClick(r, e)}
+                              >
+                                {r.chain}{r.seqId}{r.resType}
+                              </span>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Non-Covalent Bond */}
+            <InteractionsCard
+              interactions={interactions}
+              loading={interactionsLoading}
+              focusedResidues={focusedResidues}
+              taskType={taskType}
+              annotationGroups={activeGroups}
+              structureUrl={structureUrl}
+              abChains={abChains}
+              onResidueFocus={(chain, seqId, resName) => {
+                const residue = { chain, seqId, resType: resName }
+                setFocusedResidues(prev => {
+                  const idx = prev.findIndex(r => r.chain === chain && r.seqId === seqId)
+                  return idx >= 0 ? prev.filter((_, i) => i !== idx) : [...prev, residue]
+                })
+              }}
+              onResidueHover={(chain, seqId, resName) => {
+                setHoveredIxResidue(chain ? { chain, seqId, resType: resName } : null)
+              }}
+            />
+
+            {/* Liability Scan */}
+            {taskType === 'antibody' && liabilityHits.length > 0 && (
+              <LiabilityScanCard
+                hits={liabilityHits}
+                openGroups={liabilityOpen}
+                onToggleGroup={g => setLiabilityOpen(prev => {
+                  const next = new Set(prev)
+                  next.has(g) ? next.delete(g) : next.add(g)
+                  return next
+                })}
+                focusedResidues={focusedResidues}
+                onHitClick={(hit) => {
+                  const seqId = hit.start + 1
+                  const residue = { chain: hit.chain, seqId, resType: hit.matchedSeq[0] }
+                  setFocusedResidues(prev => {
+                    const idx = prev.findIndex(r => r.chain === hit.chain && r.seqId === seqId)
+                    return idx >= 0 ? prev.filter((_, i) => i !== idx) : [...prev, residue]
+                  })
+                }}
+              />
+            )}
 
             {/* Homologs card */}
             <div className="rp-anno-panel">
@@ -508,123 +619,6 @@ export default function ResultPage({ task, onBack }) {
                   </>
                 )}
               </div>
-            </div>
-
-            {/* Interactions */}
-            <InteractionsCard
-              interactions={interactions}
-              loading={interactionsLoading}
-              focusedResidues={focusedResidues}
-              taskType={taskType}
-              annotationGroups={activeGroups}
-              structureUrl={structureUrl}
-              abChains={abChains}
-              onResidueFocus={(chain, seqId, resName) => {
-                const residue = { chain, seqId, resType: resName }
-                setFocusedResidues(prev => {
-                  const idx = prev.findIndex(r => r.chain === chain && r.seqId === seqId)
-                  return idx >= 0 ? prev.filter((_, i) => i !== idx) : [...prev, residue]
-                })
-              }}
-              onResidueHover={(chain, seqId, resName) => {
-                setHoveredIxResidue(chain ? { chain, seqId, resType: resName } : null)
-              }}
-            />
-
-            {/* Liability Scan */}
-            {taskType === 'antibody' && liabilityHits.length > 0 && (
-              <LiabilityScanCard
-                hits={liabilityHits}
-                openGroups={liabilityOpen}
-                onToggleGroup={g => setLiabilityOpen(prev => {
-                  const next = new Set(prev)
-                  next.has(g) ? next.delete(g) : next.add(g)
-                  return next
-                })}
-                focusedResidues={focusedResidues}
-                onHitClick={(hit) => {
-                  const seqId = hit.start + 1
-                  const residue = { chain: hit.chain, seqId, resType: hit.matchedSeq[0] }
-                  setFocusedResidues(prev => {
-                    const idx = prev.findIndex(r => r.chain === hit.chain && r.seqId === seqId)
-                    return idx >= 0 ? prev.filter((_, i) => i !== idx) : [...prev, residue]
-                  })
-                }}
-              />
-            )}
-
-            {/* Annotations card */}
-            <div className="rp-anno-panel">
-              <div className="rp-anno-header">
-                <span className="rp-anno-title">Annotations</span>
-              </div>
-              {taskType === 'antibody' && annotations?.schemes && (
-                <div className="rp-scheme-tabs">
-                  {NUMBERING_SCHEMES.map(s => (
-                    <button
-                      key={s}
-                      className={`rp-scheme-tab ${activeScheme === s ? 'active' : ''}`}
-                      onClick={() => { setActiveScheme(s); setHoveredGroupId(null); setFocusedResidue(null); setSelectedGroupIds(new Set()) }}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                  {selectedGroupIds.size > 0 && (
-                    <button className="rp-scheme-clear" onClick={clearSelections}>
-                      Clear ({selectedGroupIds.size})
-                    </button>
-                  )}
-                </div>
-              )}
-              {!annotations ? (
-                <div className="rp-anno-loading">Loading annotations...</div>
-              ) : (
-                <div className="rp-anno-list">
-                  {activeGroups.map(group => {
-                    const isSelected = selectedGroupIds.has(group.id)
-                    return (
-                      <div
-                        key={group.id}
-                        className={`rp-anno-item ${hoveredGroupId === group.id ? 'hovered' : ''} ${isSelected ? 'selected' : ''}`}
-                        style={{ '--group-color': group.color }}
-                        onMouseEnter={() => setHoveredGroupId(group.id)}
-                        onMouseLeave={() => setHoveredGroupId(null)}
-                      >
-                        <div
-                          className="rp-anno-item-header clickable"
-                          onClick={() => toggleGroupSelection(group.id)}
-                        >
-                          <div className="rp-anno-info">
-                            <div className="rp-anno-label-row">
-                              <div className="rp-anno-dot" style={{ background: group.color }} />
-                              <span className="rp-anno-label">{group.label}</span>
-                            </div>
-                            <span className="rp-anno-residues">{group.residues.length} residues</span>
-                          </div>
-                          <span className={`rp-anno-pin ${isSelected ? 'pinned' : ''}`} style={{ color: isSelected ? group.color : undefined }}>
-                            {isSelected ? '◉' : '○'}
-                          </span>
-                        </div>
-                        <div className="rp-anno-tags">
-                          {group.residues.map(r => {
-                            const isFocused = focusedResidues.some(fr => fr.chain === r.chain && fr.seqId === r.seqId)
-                            return (
-                              <span
-                                key={`${r.chain}${r.seqId}`}
-                                className={`rp-anno-tag ${isFocused ? 'focused' : ''}`}
-                                style={{ '--tag-color': group.color }}
-                                onClick={e => handleResidueClick(r, e)}
-                              >
-                                {r.chain}{r.seqId}{r.resType}
-                              </span>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
             </div>
 
             {/* Information */}
@@ -2059,17 +2053,7 @@ function SequenceBar({ entities, groups, focusedResidues, onResidueClick }) {
 
   return (
     <div className="rp-seqbar">
-      {uniqueGroups.length > 0 && (
-        <div className="rp-seqbar-legend">
-          {uniqueGroups.map(g => (
-            <span key={g.id} className="rp-seqbar-legend-item">
-              <span className="rp-seqbar-legend-dot" style={{ background: g.color }} />
-              {g.label}
-            </span>
-          ))}
-        </div>
-      )}
-      {chains.map(entity => {
+      {chains.map((entity, idx) => {
         const seq = entity.sequence
         const blocks = []
         for (let i = 0; i < seq.length; i += BLOCK) {
@@ -2077,10 +2061,22 @@ function SequenceBar({ entities, groups, focusedResidues, onResidueClick }) {
         }
         return (
           <div key={entity.chain} className="rp-seqbar-chain">
-            <span className="rp-seqbar-chain-label">
-              {entity.label || `Chain ${entity.chain}`}
-              <span className="rp-seqbar-chain-id">{entity.chain}</span>
-            </span>
+            <div className={`rp-seqbar-chain-label ${idx === 0 ? 'rp-seqbar-chain-label--first' : ''}`}>
+              <span>
+                {entity.label || `Chain ${entity.chain}`}
+                <span className="rp-seqbar-chain-id">{entity.chain}</span>
+              </span>
+              {idx === 0 && uniqueGroups.length > 0 && (
+                <span className="rp-seqbar-legend">
+                  {uniqueGroups.map(g => (
+                    <span key={g.id} className="rp-seqbar-legend-item">
+                      <span className="rp-seqbar-legend-dot" style={{ background: g.color }} />
+                      {g.label}
+                    </span>
+                  ))}
+                </span>
+              )}
+            </div>
             <div className="rp-seqbar-blocks">
               {blocks.map(({ start, chars }) => (
                 <div key={start} className="rp-seqbar-block">

@@ -209,7 +209,7 @@
         {
           "id": "cdr_h3",
           "label": "CDR-H3",
-          "color": "#0000CD",
+          "color": "#7B5CFF",
           "reprType": "ball-and-stick",
           "residues": [
             {
@@ -684,7 +684,7 @@
         {
           "id": "cdr_h3",
           "label": "CDR-H3",
-          "color": "#0000CD",
+          "color": "#7B5CFF",
           "reprType": "ball-and-stick",
           "residues": [
             {
@@ -1139,7 +1139,7 @@
         {
           "id": "cdr_h3",
           "label": "CDR-H3",
-          "color": "#0000CD",
+          "color": "#7B5CFF",
           "reprType": "ball-and-stick",
           "residues": [
             {
@@ -1654,7 +1654,7 @@
         {
           "id": "cdr_h3",
           "label": "CDR-H3",
-          "color": "#0000CD",
+          "color": "#7B5CFF",
           "reprType": "ball-and-stick",
           "residues": [
             {
@@ -2214,7 +2214,7 @@
         {
           "id": "cdr_h3",
           "label": "CDR-H3",
-          "color": "#0000CD",
+          "color": "#7B5CFF",
           "reprType": "ball-and-stick",
           "residues": [
             {

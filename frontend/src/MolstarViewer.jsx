@@ -66,6 +66,9 @@ export default function MolstarViewer({
           render: renderReact18,
           spec: {
             ...DefaultPluginUISpec(),
+            canvas3d: {
+              camera: { helper: { axes: { name: 'off', params: {} } } },
+            },
             layout: { initial: { isExpanded: false, showControls: false } },
             components: {
               remoteState: 'none',
@@ -91,7 +94,9 @@ export default function MolstarViewer({
           },
         })
         try {
-          plugin.canvas3d?.setProps({ helper: { axes: { name: 'off', params: {} } } })
+          plugin.canvas3d?.setProps({
+            camera: { helper: { axes: { name: 'off', params: {} } } },
+          })
         } catch {}
 
 
@@ -99,6 +104,11 @@ export default function MolstarViewer({
         await registerElectrostaticTheme(plugin)
         await applyRepresentationMode(plugin, reprModeRef.current, taskTypeRef.current, colorModeRef.current)
         await PluginCommands.Camera.Reset(plugin)
+        try {
+          plugin.canvas3d?.setProps({
+            camera: { helper: { axes: { name: 'off', params: {} } } },
+          })
+        } catch {}
 
         const { StructureElement, StructureProperties: SP } = await import(
           'molstar/lib/commonjs/mol-model/structure'
@@ -113,7 +123,7 @@ export default function MolstarViewer({
             return
           }
           const e = loci.elements[0]
-          if (!e) { clickFromStructureRef.current = true; onResidueClickRef.current(null); return }
+          if (!e) return
           try {
             const loc = StructureElement.Location.create(loci.structure)
             loc.unit = e.unit
@@ -121,17 +131,10 @@ export default function MolstarViewer({
             const chain = String(SP.chain.auth_asym_id(loc))
             const seqId = Number(SP.residue.auth_seq_id(loc))
             const resType = String(SP.atom.auth_comp_id(loc))
-            if (!chain || !isFinite(seqId)) {
-              clickFromStructureRef.current = true
-              onResidueClickRef.current(null)
-              return
-            }
+            if (!chain || !isFinite(seqId)) return
             clickFromStructureRef.current = true
             onResidueClickRef.current({ chain, seqId, resType })
-          } catch {
-            clickFromStructureRef.current = true
-            onResidueClickRef.current(null)
-          }
+          } catch {}
         })
 
         if (mounted) { setIsLoading(false); setStructureReady(true) }
@@ -322,14 +325,14 @@ async function getLoci(plugin, expression) {
   return StructureSelection.toLociWithSourceUnits(sel)
 }
 
-// ── Hover highlight ───────────────────────────────────────────────────
+// ── Selection-based highlight (persists through hover) ───────────────
 
 async function applyGroupHighlight(plugin, residues) {
   try {
     const expression = await buildResidueExpression(residues)
     const loci = await getLoci(plugin, expression)
     if (!loci) return
-    plugin.managers.interactivity.lociHighlights.highlightOnly({ loci, repr: void 0 })
+    plugin.managers.interactivity.lociSelects.selectOnly({ loci, repr: void 0 })
   } catch (err) {
     console.warn('Group highlight failed:', err)
   }
@@ -337,7 +340,7 @@ async function applyGroupHighlight(plugin, residues) {
 
 function clearGroupHighlight(plugin) {
   try {
-    plugin.managers.interactivity.lociHighlights.clearHighlights()
+    plugin.managers.interactivity.lociSelects.deselectAll()
   } catch (err) {
     console.warn('Clear highlight failed:', err)
   }
@@ -376,7 +379,6 @@ async function applyResidueFocus(plugin, residue, focusRefRef) {
 function clearResidueFocus(plugin, focusRefRef) {
   focusRefRef.current = null
   try { plugin.managers.structure.focus.clear() } catch {}
-  try { plugin.managers.structure.selection.clear() } catch {}
 }
 
 // ── Representation mode switching ────────────────────────────────────
