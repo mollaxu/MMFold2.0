@@ -4,6 +4,7 @@ import PAECanvas from './PAECanvas'
 import AppHeader from './AppHeader'
 import { scanEntities } from './liabilityScanner'
 import { analyzeInteractions, analyzeProteinProteinInteractions } from './interactionAnalyzer'
+import { buildRuleContext, generateSuggestions } from './optimizationRules'
 
 import './HomePage.css'
 import './ResultPage.css'
@@ -296,15 +297,7 @@ export default function ResultPage({ task, onBack }) {
               <span className="rp-metric-value">{summary.ptm?.toFixed(2) ?? '—'}</span>
               <a href="#" className="rp-learn-more">learn more</a>
             </div>
-          ) : <div />}
-          <button
-            className="rp-mos-btn"
-            onClick={() => window.open(MOS_URL, '_blank', 'noopener,noreferrer')}
-          >
-            <span className="rp-mos-prompt" key={promptIndex}>{prompts[promptIndex]}</span>
-            <span className="rp-mos-action">Go to MOS →</span>
-          </button>
-
+          ) : null}
           {/* LEFT: sticky 3D viewer + legend */}
           <div className="rp-left-col">
             <div className="rp-viewer-card" style={{ flex: 1, minHeight: 0 }}>
@@ -396,6 +389,18 @@ export default function ResultPage({ task, onBack }) {
           {/* RIGHT: scrollable panels */}
           <div className="rp-right-col">
 
+            {/* Optimization Suggestions */}
+            <h2 className="rp-section-label">Optimization Suggestions</h2>
+            <AiSuggestionsCard
+              taskType={taskType}
+              summary={summary}
+              annotationGroups={activeGroups}
+              liabilityHits={liabilityHits}
+              information={information}
+              onResidueClick={handleResidueClick}
+            />
+
+            <h2 className="rp-section-label">Data Evidence</h2>
             {/* Annotations card */}
             <div className="rp-anno-panel">
               <div className="rp-anno-header">
@@ -470,7 +475,6 @@ export default function ResultPage({ task, onBack }) {
               )}
             </div>
 
-            {/* Non-Covalent Bond */}
             <InteractionsCard
               interactions={interactions}
               loading={interactionsLoading}
@@ -978,6 +982,99 @@ function groupByEpitope(rows, antigenKey, antibodyKey, cdrMap) {
   }
   return grouped
 }
+
+const PRIORITY_COLORS = { high: '#ef4444', medium: '#f59e0b', low: '#6b7280' }
+const PRIORITY_LABELS = { high: 'High', medium: 'Medium', low: 'Low' }
+const AI_CTA_PROMPTS = {
+  Developability: 'Want to improve developability?',
+  Affinity: 'Want to optimize binding affinity?',
+  Selectivity: 'Want to engineer selectivity?',
+  Catalysis: 'Want to boost catalytic activity?',
+  Stability: 'Want to enhance stability?',
+}
+
+function AiSuggestionsCard({ taskType, summary, annotationGroups, liabilityHits, information, onResidueClick }) {
+  const suggestions = useMemo(() => {
+    if (!summary) return []
+    const ctx = buildRuleContext(taskType, summary, annotationGroups, liabilityHits, information)
+    return generateSuggestions(ctx)
+  }, [taskType, summary, annotationGroups, liabilityHits, information])
+
+  const [openIds, setOpenIds] = useState(new Set())
+  const firstIdRef = useRef(null)
+  if (suggestions.length && firstIdRef.current !== suggestions[0].id) {
+    firstIdRef.current = suggestions[0].id
+    if (!openIds.has(suggestions[0].id)) {
+      setOpenIds(new Set([suggestions[0].id]))
+    }
+  }
+  const toggle = id => setOpenIds(prev => {
+    const next = new Set(prev)
+    next.has(id) ? next.delete(id) : next.add(id)
+    return next
+  })
+
+  if (!suggestions.length) return null
+
+  return (
+    <>
+      {suggestions.map(s => {
+        const isOpen = openIds.has(s.id)
+        return (
+          <div key={s.id} className="rp-anno-panel rp-ai-card" style={{ '--ai-color': PRIORITY_COLORS[s.priority] }}>
+            <div className="rp-ai-card-header" onClick={() => toggle(s.id)}>
+              <span className="rp-ai-title">{s.title}</span>
+              <span className="rp-ai-category" style={{ background: PRIORITY_COLORS[s.priority] }}>
+                {s.category}
+              </span>
+              <span className={`rp-ai-chevron ${isOpen ? 'open' : ''}`}>▸</span>
+            </div>
+            {isOpen && (
+              <div className="rp-ai-card-body">
+                <p className="rp-ai-summary">{s.summary}</p>
+                <div className="rp-ai-section">
+                  <span className="rp-ai-section-label">Evidence</span>
+                  <ul className="rp-ai-evidence">
+                    {s.evidence.map((e, i) => <li key={i}>{e}</li>)}
+                  </ul>
+                  {s.relatedResidues?.length > 0 && (
+                    <div className="rp-ai-residues">
+                      {s.relatedResidues.map((r, i) => (
+                        <span
+                          key={i}
+                          className="rp-ai-residue-tag"
+                          onClick={e => onResidueClick?.(r, e)}
+                        >
+                          {r.chain}:{r.resType}{r.seqId}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="rp-ai-section">
+                  <span className="rp-ai-section-label">Strategy</span>
+                  <p className="rp-ai-strategy">{s.strategy}</p>
+                </div>
+                <button
+                  className="rp-mos-btn rp-ai-cta"
+                  onClick={() => window.open(MOS_URL, '_blank', 'noopener,noreferrer')}
+                >
+                  <span className="rp-mos-prompt">{AI_CTA_PROMPTS[s.category] || `Want to optimize ${s.category.toLowerCase()}?`}</span>
+                  <span className="rp-mos-action">Go to MOS →</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </>
+  )
+}
+
+// TODO: Replace rule engine with API call when backend is ready
+// function fetchAiSuggestions(folder) {
+//   return fetch(`/api/optimize/${folder}`).then(r => r.json())
+// }
 
 function InteractionsCard({ interactions, loading, focusedResidues, taskType, annotationGroups, structureUrl, abChains, onResidueFocus, onResidueHover }) {
   const [viewMode, setViewMode] = useState('2d')
