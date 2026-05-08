@@ -283,7 +283,7 @@ export default function ResultPage({ task, onBack }) {
                 className={`rp-sample-tab ${activeSample === i ? 'active' : ''}`}
                 onClick={() => setActiveSample(i)}
               >
-                Sample {i + 1}
+                Model {i + 1}
               </button>
             ))}
           </div>

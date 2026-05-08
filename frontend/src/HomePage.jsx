@@ -128,7 +128,7 @@ function QuickPaste({ onParsed, onError, onClear }) {
     <div className="qp-wrap">
       <textarea
         className="qp-textarea"
-        placeholder={'>Chain_A\nMKTAYIAKQRQISFVKSHFS...\n\n>Chain_B\nDIQMTQSPSFLSASVGDRVT...\n\nPaste FASTA or plain sequences separated by blank lines'}
+        placeholder={'>Chain_A\nMKTAYIAKQRQISFVKSHFS...\n\n>Chain_B\nDIQMTQSPSFLSASVGDRVT...\n\nPaste sequence'}
         value={value}
         onChange={e => setValue(e.target.value)}
         onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleParse() }}
@@ -158,9 +158,34 @@ function QuickPaste({ onParsed, onError, onClear }) {
 
 // ── EntityCard ─────────────────────────────────────────────────────
 
+const VALID_CHARS = {
+  protein: new Set('ACDEFGHIKLMNPQRSTVWYUO'),
+  dna:     new Set('ACGTNRYWSKMBDHV'),
+  rna:     new Set('ACGUNRYWSKMBDHV'),
+}
+
+function getInvalidChars(sequence, entityType) {
+  const valid = VALID_CHARS[entityType]
+  if (!valid) return []
+  const invalid = new Set()
+  for (const line of sequence.split('\n')) {
+    if (line.trimStart().startsWith('>')) continue
+    for (const ch of line.toUpperCase()) {
+      if (ch === ' ' || ch === '\t' || ch === '\r') continue
+      if (!valid.has(ch)) invalid.add(ch)
+    }
+  }
+  return [...invalid]
+}
+
 function EntityCard({ entityType, setEntityType, copies, setCopies, sequence, setSequence, canRemove, onRemove }) {
   const [collapsed, setCollapsed] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+
+  const invalidChars = useMemo(
+    () => sequence.trim() ? getInvalidChars(sequence, entityType) : [],
+    [sequence, entityType]
+  )
 
   if (collapsed) {
     return (
@@ -197,12 +222,17 @@ function EntityCard({ entityType, setEntityType, copies, setCopies, sequence, se
           />
         </div>
         <textarea
-          className="entity-textarea"
+          className={`entity-textarea${invalidChars.length ? ' entity-textarea--invalid' : ''}`}
           placeholder="Paste sequence or fasta"
           value={sequence}
           onChange={e => setSequence(e.target.value)}
           rows={3}
         />
+        {invalidChars.length > 0 && (
+          <div className="entity-seq-warning">
+            Invalid character{invalidChars.length > 1 ? 's' : ''}: {invalidChars.map(c => <code key={c}>{c}</code>)}
+          </div>
+        )}
       </div>
       <div className="entity-actions">
         <div style={{ position: 'relative' }}>

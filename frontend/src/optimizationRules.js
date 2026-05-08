@@ -559,26 +559,6 @@ const ANTIBODY_RULES = [
       }
     },
   },
-  {
-    id: 'ab_cdr_h3',
-    condition: ctx => ctx.cdrH3Length > 15,
-    priority: 'medium',
-    category: 'Developability',
-    title: 'CDR-H3 Loop Engineering',
-    build(ctx) {
-      const h3Group = ctx.cdrGroups.find(g => /h3/i.test(g.id))
-      return {
-        summary: `CDR-H3 is ${ctx.cdrH3Length} residues long — unusually extended loops increase aggregation propensity and reduce conformational stability, creating a manufacturing risk.`,
-        evidence: [
-          `CDR-H3 length: ${ctx.cdrH3Length} residues (typical: 9–15)`,
-          `Overall pLDDT: ${ctx.pLDDT?.toFixed(1) ?? 'N/A'} (CDR-H3 local confidence likely lower)`,
-          `Aggregation risk: elevated due to exposed hydrophobic residues in long loop`,
-        ],
-        strategy: 'Identify paratope contact residues in CDR-H3 via structure analysis. Design truncated variants (13–15 residues) preserving key contacts. Shorter loops reduce conformational entropy penalty, potentially improving both affinity and manufacturability.',
-        relatedResidues: (h3Group?.residues ?? []).slice(0, 6),
-      }
-    },
-  },
 ]
 
 export function generateSuggestions(ctx) {

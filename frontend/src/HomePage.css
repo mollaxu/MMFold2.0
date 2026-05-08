@@ -459,6 +459,27 @@
 }
 .entity-textarea::placeholder { color: #555; }
 .entity-textarea:focus { outline: none; border-color: #444; }
+.entity-textarea--invalid { border-color: #c0392b; }
+.entity-textarea--invalid:focus { border-color: #e74c3c; }
+
+.entity-seq-warning {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: #e74c3c;
+  padding: 4px 2px 0;
+}
+.entity-seq-warning code {
+  background: rgba(231, 76, 60, 0.15);
+  border: 1px solid rgba(231, 76, 60, 0.3);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-family: monospace;
+  font-size: 12px;
+  color: #e74c3c;
+}
 
 .entity-actions { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
 .entity-icon-btn {
