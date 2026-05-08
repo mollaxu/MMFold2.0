@@ -207,6 +207,10 @@ export default function ResultPage({ task, onBack }) {
   const handleResidueClick = (residue, e) => {
     e?.stopPropagation?.()
     if (!residue) { setFocusedResidues([]); setSelectedGroupIds(new Set()); setHoveredIxResidue(null); return }
+    if (Array.isArray(residue)) {
+      setFocusedResidues(residue)
+      return
+    }
     setFocusedResidues(prev => {
       const idx = prev.findIndex(r => r.chain === residue.chain && r.seqId === residue.seqId)
       return idx >= 0 ? prev.filter((_, i) => i !== idx) : [...prev, residue]
@@ -392,15 +396,17 @@ export default function ResultPage({ task, onBack }) {
             {/* Optimization Suggestions */}
             <h2 className="rp-section-label">Optimization Suggestions</h2>
             <AiSuggestionsCard
+              key={activeSample}
               taskType={taskType}
               summary={summary}
               annotationGroups={activeGroups}
               liabilityHits={liabilityHits}
               information={information}
+              interactions={interactions}
               onResidueClick={handleResidueClick}
             />
 
-            <h2 className="rp-section-label">Data Evidence</h2>
+            <h2 className="rp-section-label">MMetrics</h2>
             {/* Annotations card */}
             <div className="rp-anno-panel">
               <div className="rp-anno-header">
@@ -993,19 +999,76 @@ const AI_CTA_PROMPTS = {
   Stability: 'Want to enhance stability?',
 }
 
-function AiSuggestionsCard({ taskType, summary, annotationGroups, liabilityHits, information, onResidueClick }) {
+function StrategySection({ strategy, mutationTable }) {
+  if (!mutationTable?.length) {
+    return <p className="rp-ai-strategy">{strategy}</p>
+  }
+  return (
+    <div className="rp-ai-strategy-block">
+      {strategy && <p className="rp-ai-strategy">{strategy}</p>}
+      <div className="rp-ai-mutation-table">
+        <div className="rp-ai-mutation-header">
+          <span>Position</span>
+          <span>Substitution</span>
+          <span>Region</span>
+          <span>Rationale</span>
+          <span>Priority</span>
+        </div>
+        {mutationTable.map((m, i) => (
+          <div key={i} className="rp-ai-mutation-row">
+            <span className="rp-ai-mut-pos">{m.position}</span>
+            <span className="rp-ai-mut-sub">
+              <span className="rp-ai-mut-from">{m.from}</span>
+              <span className="rp-ai-mut-arrow">→</span>
+              <span className="rp-ai-mut-to">{m.to}</span>
+            </span>
+            <span className="rp-ai-mut-region">{m.region}</span>
+            <span className="rp-ai-mut-rationale">{m.rationale}</span>
+            <span className={`rp-ai-ev-risk rp-ai-ev-risk--${m.priority.toLowerCase()}`}>{m.priority}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function AiSuggestionsCard({ taskType, summary, annotationGroups, liabilityHits, information, interactions, onResidueClick }) {
   const suggestions = useMemo(() => {
     if (!summary) return []
-    const ctx = buildRuleContext(taskType, summary, annotationGroups, liabilityHits, information)
+    const ctx = buildRuleContext(taskType, summary, annotationGroups, liabilityHits, information, interactions)
     return generateSuggestions(ctx)
-  }, [taskType, summary, annotationGroups, liabilityHits, information])
+  }, [taskType, summary, annotationGroups, liabilityHits, information, interactions])
+
+  const [phase, setPhase] = useState('thinking')
+  const [revealCount, setRevealCount] = useState(0)
+  const phaseKeyRef = useRef(null)
+
+  const suggestionsKey = suggestions.map(s => s.id).join(',')
+  if (suggestionsKey && phaseKeyRef.current !== suggestionsKey) {
+    phaseKeyRef.current = suggestionsKey
+    setPhase('thinking')
+    setRevealCount(0)
+  }
+
+  useEffect(() => {
+    if (!suggestions.length || phase !== 'thinking') return
+    const t = setTimeout(() => { setPhase('streaming'); setRevealCount(1) }, 3000)
+    return () => clearTimeout(t)
+  }, [suggestions.length, phase])
+
+  useEffect(() => {
+    if (phase !== 'streaming' || revealCount >= suggestions.length) return
+    const t = setTimeout(() => setRevealCount(prev => prev + 1), 600)
+    return () => clearTimeout(t)
+  }, [phase, revealCount, suggestions.length])
 
   const [openIds, setOpenIds] = useState(new Set())
   const firstIdRef = useRef(null)
-  if (suggestions.length && firstIdRef.current !== suggestions[0].id) {
-    firstIdRef.current = suggestions[0].id
-    if (!openIds.has(suggestions[0].id)) {
-      setOpenIds(new Set([suggestions[0].id]))
+  const visible = phase === 'thinking' ? [] : suggestions.slice(0, revealCount)
+  if (visible.length && firstIdRef.current !== visible[0].id) {
+    firstIdRef.current = visible[0].id
+    if (!openIds.has(visible[0].id)) {
+      setOpenIds(new Set([visible[0].id]))
     }
   }
   const toggle = id => setOpenIds(prev => {
@@ -1016,12 +1079,23 @@ function AiSuggestionsCard({ taskType, summary, annotationGroups, liabilityHits,
 
   if (!suggestions.length) return null
 
+  if (phase === 'thinking') {
+    return (
+      <div className="rp-anno-panel rp-ai-thinking">
+        <div className="rp-ai-thinking-content">
+          <span className="rp-ai-thinking-dots"><span /><span /><span /></span>
+          <span className="rp-ai-thinking-text">Analyzing structure and generating suggestions...</span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
-      {suggestions.map(s => {
+      {visible.map((s, idx) => {
         const isOpen = openIds.has(s.id)
         return (
-          <div key={s.id} className="rp-anno-panel rp-ai-card" style={{ '--ai-color': PRIORITY_COLORS[s.priority] }}>
+          <div key={s.id} className={`rp-anno-panel rp-ai-card rp-ai-card--reveal`} style={{ '--ai-color': PRIORITY_COLORS[s.priority], animationDelay: `${idx * 0.1}s` }}>
             <div className="rp-ai-card-header" onClick={() => toggle(s.id)}>
               <span className="rp-ai-title">{s.title}</span>
               <span className="rp-ai-category" style={{ background: PRIORITY_COLORS[s.priority] }}>
@@ -1034,26 +1108,48 @@ function AiSuggestionsCard({ taskType, summary, annotationGroups, liabilityHits,
                 <p className="rp-ai-summary">{s.summary}</p>
                 <div className="rp-ai-section">
                   <span className="rp-ai-section-label">Evidence</span>
-                  <ul className="rp-ai-evidence">
-                    {s.evidence.map((e, i) => <li key={i}>{e}</li>)}
-                  </ul>
-                  {s.relatedResidues?.length > 0 && (
-                    <div className="rp-ai-residues">
-                      {s.relatedResidues.map((r, i) => (
-                        <span
-                          key={i}
-                          className="rp-ai-residue-tag"
-                          onClick={e => onResidueClick?.(r, e)}
-                        >
-                          {r.chain}:{r.resType}{r.seqId}
-                        </span>
+                  {s.evidence.length > 0 && typeof s.evidence[0] === 'object' ? (
+                    <div className="rp-ai-evidence-structured">
+                      {s.evidence.map((e, i) => (
+                        <div key={i} className="rp-ai-ev-item" onClick={() => e.residues?.length && onResidueClick?.(e.residues)}>
+                          <div className="rp-ai-ev-header">
+                            <span className="rp-ai-ev-type">{e.type}</span>
+                            <span className="rp-ai-ev-motif">motif: {e.motif}</span>
+                            <span className={`rp-ai-ev-risk rp-ai-ev-risk--${e.risk.toLowerCase()}`}>{e.risk}</span>
+                          </div>
+                          <div className="rp-ai-ev-details">
+                            <span className="rp-ai-ev-detail"><span className="rp-ai-ev-label">Position</span>{e.position}</span>
+                            {e.cdr && <span className="rp-ai-ev-detail"><span className="rp-ai-ev-label">Region</span>{e.cdr}</span>}
+                            {e.rsa != null && <span className="rp-ai-ev-detail"><span className="rp-ai-ev-label">RSA</span>{e.rsa}% ({e.rsaLabel})</span>}
+                          </div>
+                          {e.mechanism && <p className="rp-ai-ev-mechanism">{e.mechanism}</p>}
+                        </div>
                       ))}
                     </div>
+                  ) : (
+                    <>
+                      <ul className="rp-ai-evidence">
+                        {s.evidence.map((e, i) => <li key={i}>{e}</li>)}
+                      </ul>
+                      {s.relatedResidues?.length > 0 && (
+                        <div className="rp-ai-residues">
+                          {s.relatedResidues.map((r, i) => (
+                            <span
+                              key={i}
+                              className="rp-ai-residue-tag"
+                              onClick={e => onResidueClick?.(r, e)}
+                            >
+                              {r.chain}:{r.resType}{r.seqId}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
                 <div className="rp-ai-section">
                   <span className="rp-ai-section-label">Strategy</span>
-                  <p className="rp-ai-strategy">{s.strategy}</p>
+                  <StrategySection strategy={s.strategy} mutationTable={s.mutationTable} />
                 </div>
                 <button
                   className="rp-mos-btn rp-ai-cta"

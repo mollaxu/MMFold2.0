@@ -270,7 +270,7 @@
 .import-dropdown {
   position: absolute;
   right: 0;
-  top: calc(100% + 6px);
+  bottom: calc(100% + 6px);
   background: #222;
   border: 1px solid #333;
   border-radius: 8px;
@@ -381,6 +381,19 @@
 
 /* ── Entity cards ── */
 .home-entities { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+.entity-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.entity-add-btn {
+  align-self: flex-start;
+  background: none;
+  border: 1px dashed #444;
+  color: #888;
+  padding: 8px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: border-color 0.15s, color 0.15s;
+}
+.entity-add-btn:hover { border-color: #666; color: #ccc; }
 
 .entity-card {
   display: flex;

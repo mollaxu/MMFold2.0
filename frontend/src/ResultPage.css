@@ -737,6 +737,44 @@
 /* ── AI Optimization Suggestions ── */
 .rp-ai-card {
 }
+.rp-ai-card--reveal {
+  animation: ai-card-reveal 0.5s ease both;
+}
+@keyframes ai-card-reveal {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.rp-ai-thinking {
+  padding: 20px;
+}
+.rp-ai-thinking-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.rp-ai-thinking-dots {
+  display: flex;
+  gap: 4px;
+}
+.rp-ai-thinking-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #888;
+  animation: ai-dot-pulse 1.4s ease-in-out infinite;
+}
+.rp-ai-thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+.rp-ai-thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes ai-dot-pulse {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+.rp-ai-thinking-text {
+  font-size: 13px;
+  color: #888;
+}
+
 .rp-ai-card-header {
   display: flex;
   align-items: center;
@@ -747,7 +785,7 @@
 }
 .rp-ai-card-header:hover { background: #1e1e1e; }
 .rp-ai-title {
-  font-size: 18px;
+  font-size: 15px;
   color: #fff;
   font-weight: 600;
   min-width: 0;
@@ -801,7 +839,7 @@
   gap: 4px;
 }
 .rp-ai-section-label {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   color: #ccc;
   letter-spacing: 0.02em;
@@ -809,16 +847,151 @@
 .rp-ai-evidence {
   margin: 0;
   padding-left: 16px;
-  font-size: 13px;
+  font-size: 14px;
   color: #bbb;
   line-height: 1.7;
 }
 .rp-ai-evidence li { margin-bottom: 3px; }
-.rp-ai-strategy {
+
+.rp-ai-evidence-structured {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rp-ai-ev-item {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.rp-ai-ev-item:hover {
+  border-color: #444;
+  background: #1e1e1e;
+}
+.rp-ai-ev-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rp-ai-ev-type {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+.rp-ai-ev-motif {
+  font-size: 12px;
+  font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+  color: #888;
+}
+.rp-ai-ev-risk {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-left: auto;
+}
+.rp-ai-ev-risk--high { color: #ef4444; background: rgba(239,68,68,0.12); }
+.rp-ai-ev-risk--medium { color: #f59e0b; background: rgba(245,158,11,0.12); }
+.rp-ai-ev-risk--low { color: #6b7280; background: rgba(107,114,128,0.12); }
+
+.rp-ai-ev-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+.rp-ai-ev-detail {
   font-size: 13px;
+  color: #ccc;
+}
+.rp-ai-ev-label {
+  color: #666;
+  margin-right: 4px;
+}
+.rp-ai-ev-mechanism {
+  font-size: 12px;
+  color: #777;
+  line-height: 1.5;
+  margin: 0;
+  font-style: italic;
+}
+
+.rp-ai-strategy {
+  font-size: 14px;
   color: #ccc;
   line-height: 1.6;
   margin: 0;
+}
+.rp-ai-strategy-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.rp-ai-mutation-table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  font-size: 12px;
+}
+.rp-ai-mutation-header,
+.rp-ai-mutation-row {
+  min-width: 560px;
+}
+.rp-ai-mutation-header,
+.rp-ai-mutation-row {
+  display: grid;
+  grid-template-columns: 120px 130px 90px 1fr 64px;
+  align-items: center;
+  padding: 6px 14px;
+  gap: 10px;
+}
+.rp-ai-mutation-header {
+  background: #1a1a1a;
+  color: #555;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid #2a2a2a;
+}
+.rp-ai-mutation-row {
+  border-bottom: 1px solid #1c1c1c;
+  transition: background 0.12s;
+}
+.rp-ai-mutation-row:last-child { border-bottom: none; }
+.rp-ai-mutation-row:hover { background: #161616; }
+.rp-ai-mut-pos {
+  font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+  font-size: 12px;
+  color: #bbb;
+}
+.rp-ai-mut-sub {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+  font-size: 12px;
+}
+.rp-ai-mut-from { color: #666; }
+.rp-ai-mut-arrow { color: #444; }
+.rp-ai-mut-to { color: #4dd8e8; font-weight: 700; }
+.rp-ai-mut-region {
+  font-size: 11px;
+  color: #888;
+}
+.rp-ai-mut-rationale {
+  font-size: 11px;
+  color: #777;
+  line-height: 1.4;
 }
 .rp-ai-residues {
   display: flex;

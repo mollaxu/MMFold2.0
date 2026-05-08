@@ -92,6 +92,7 @@ function parsePlainSequences(text) {
 
 function QuickPaste({ onParsed, onError, onClear }) {
   const [value, setValue] = useState('')
+  const [importOpen, setImportOpen] = useState(false)
   const fastaRef = useRef(null)
   const jsonRef = useRef(null)
 
@@ -109,13 +110,12 @@ function QuickPaste({ onParsed, onError, onClear }) {
 
   const handleFile = (file) => {
     if (!file) return
+    setImportOpen(false)
     const ext = file.name.split('.').pop().toLowerCase()
     const reader = new FileReader()
     reader.onload = (e) => {
       try {
         const parsed = ext === 'json' ? parseJson(e.target.result) : parseFasta(e.target.result)
-        const text = parsed.map(p => `>${p.type}_${p.uid}\n${p.sequence}`).join('\n\n')
-        setValue(text)
         onParsed(parsed)
       } catch (err) {
         onError(err.message)
@@ -136,7 +136,15 @@ function QuickPaste({ onParsed, onError, onClear }) {
       <div className="qp-actions">
         <button className="qp-btn-parse" disabled={!value.trim()} onClick={handleParse}>Parse & Fill</button>
         <div className="qp-btns">
-          <button className="qp-btn-secondary" onClick={() => fastaRef.current?.click()}>Import</button>
+          <div style={{ position: 'relative' }}>
+            <button className="qp-btn-secondary" onClick={() => setImportOpen(o => !o)}>Import</button>
+            {importOpen && (
+              <div className="import-dropdown" onMouseLeave={() => setImportOpen(false)}>
+                <button className="import-dropdown-item" onClick={() => fastaRef.current?.click()}>Upload FASTA</button>
+                <button className="import-dropdown-item" onClick={() => jsonRef.current?.click()}>Upload JSON</button>
+              </div>
+            )}
+          </div>
           <button className="qp-btn-secondary" onClick={() => { setValue(''); onClear() }}>Clear</button>
         </div>
       </div>
@@ -545,9 +553,29 @@ export default function HomePage({ onViewResult }) {
         {/* Quick paste */}
         <QuickPaste onParsed={handleParsed} onError={handleImportError} onClear={clearAll} />
 
+        {/* Entity composer */}
+        {entries.some(e => e.sequence) && (
+          <div className="entity-list">
+            {entries.map(e => (
+              <EntityCard
+                key={e.uid}
+                entityType={e.type}
+                setEntityType={v => updateEntry(e.uid, { type: v })}
+                copies={e.copies}
+                setCopies={v => updateEntry(e.uid, { copies: v })}
+                sequence={e.sequence}
+                setSequence={v => updateEntry(e.uid, { sequence: v })}
+                canRemove={entries.length > 1}
+                onRemove={() => removeEntry(e.uid)}
+              />
+            ))}
+            <button className="entity-add-btn" onClick={addEntry}>+ Add Entity</button>
+          </div>
+        )}
+
         {/* Submit row */}
         <div className="home-submit-row">
-          <button className="home-btn-primary" onClick={() => setShowPreview(true)}>Continue and preview job</button>
+          <button className="home-btn-primary" disabled={!entries.some(e => e.sequence)} onClick={() => setShowPreview(true)}>Continue and preview job</button>
         </div>
 
         {/* Job history */}
